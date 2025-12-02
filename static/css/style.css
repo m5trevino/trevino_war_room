@@ -1,10 +1,93 @@
-body { margin:0; font-family: monospace; background:#000; color:#0f0; display:flex; }
-#left { width:40%; border-right:2px solid #0f0; padding:10px; overflow-y:auto; height:100vh; }
-#right { width:60%; padding:20px; overflow-y:auto; height:100vh; }
-.job-card { padding:12px; margin:8px 0; border:1px solid #0f0; cursor:pointer; }
-.job-card:hover { background:#002200; }
-#keys { position:fixed; bottom:10px; right:10px; background:#000; padding:10px; border:2px solid #0f0; }
-.skill { margin:5px 0; padding:5px; background:#001100; display:inline-block; }
-.required { border-left:4px solid #0ff; }
-#details h2 { color:#0ff; }
-#details h3 { margin-top:20px; }
+:root { --bg:#0f1419; --panel:#161b22; --text:#e0e0e0; --green:#00e676; --gold:#ffd700; --red:#ff5252; --blue:#2196f3; --border:#333; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:'Consolas',monospace; height:100vh; display:flex; overflow:hidden; }
+
+/* LAYOUT */
+#job-list-pane { width:60%; border-right:1px solid var(--border); display:flex; flex-direction:column; }
+#detail-pane { width:40%; background:var(--panel); display:flex; flex-direction:column; }
+
+/* HEADER STATS */
+#header-stats { padding:8px 12px; font-size:11px; background:#0d1117; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center; }
+.stat-item { margin-right:10px; color:#888; }
+.stat-val-s { color:#fff; font-weight:bold; }
+.stat-val-a { color:#fff; font-weight:bold; }
+
+/* TABS */
+#tabs { display:flex; background:#0d1117; border-bottom:1px solid var(--green); }
+.tab { flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; color:#666; font-size:12px; border-bottom:3px solid transparent; }
+.tab:hover { background:#161b22; color:#fff; }
+.tab.active { color:#fff; background:#161b22; border-bottom-color:var(--green); }
+
+/* GRID SYSTEM */
+.grid-header { display:grid; padding:8px; font-size:11px; font-weight:bold; color:#888; background:#0d1117; border-bottom:1px solid #333; align-items:center;}
+.job-row { display:grid; padding:10px; border-bottom:1px solid #222; cursor:pointer; font-size:13px; align-items:center; }
+.job-row:hover { background:#21262d; }
+.job-row.active { background:#1a2636; border-left:4px solid var(--green); }
+#list-container { flex-grow:1; overflow-y:auto; }
+
+/* VIEWS - HIDDEN BY DEFAULT */
+#standard-view, #refinery-view, #incinerator-view, #factory-view, #product-view { display:none; flex-direction:column; height:100%; }
+
+/* VIEW: STANDARD */
+#std-skills-box { height:30%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
+#std-desc-box { height:70%; padding:20px; overflow-y:auto; color:#ccc; line-height:1.5; font-size:14px; }
+
+/* VIEW: REFINERY */
+#unsorted-box { height:40%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
+#arsenal-box { height:60%; display:flex; flex-direction:column; }
+.arsenal-cols { display:flex; height:100%; }
+.arsenal-col { flex:1; border-right:1px solid #333; padding:10px; overflow-y:auto; }
+.col-header { color:#666; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; text-align:center; }
+
+/* VIEW: INCINERATOR (GRAVEYARD) */
+#debris-box { height:40%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
+#furnace-box { height:60%; padding:20px; color:#666; font-size:12px; overflow-y:auto; }
+
+/* VIEW: FACTORY */
+#factory-desc { height:50%; padding:15px; overflow-y:auto; border-bottom:1px solid var(--border); color:#888; font-size:12px; }
+#factory-terminal { height:50%; background:#000; color:var(--green); padding:15px; font-family:'Courier New'; font-size:12px; overflow-y:auto; white-space:pre-wrap; }
+
+/* VIEW: PRODUCT */
+#product-header { padding:10px; background:#0d1117; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
+#resume-content { flex:1; overflow-y:auto; padding:15px; font-size:12px; color:#ccc; font-family:'Courier New'; white-space:pre-wrap; }
+
+/* TAGS & CHIPS */
+.tag-section-title { font-size:10px; color:#666; margin:5px 0 2px 0; text-transform:uppercase; font-weight:bold; }
+.skill-tag { display:inline-block; border:1px solid #444; padding:3px 8px; margin:3px; border-radius:4px; font-size:11px; cursor:pointer; }
+.skill-tag.new { border-color:var(--gold); color:var(--gold); }
+.skill-tag.q { border-color:var(--green); color:var(--green); }
+.skill-tag.s { border-color:var(--blue); color:var(--blue); }
+.skill-tag.b { border-color:#9c27b0; color:#9c27b0; }
+.skill-tag.sorted { border-color:#333; color:#666; background:#111; }
+
+.chip { display: inline-block; padding: 5px 10px; margin: 4px; border: 1px solid #555; background: #222; color: #aaa; font-size: 11px; cursor: pointer; border-radius:4px; }
+.chip.company { border-color: var(--gold); color: var(--gold); }
+.chip.title { border-color: var(--blue); color: var(--blue); }
+.chip.tag { border-color: #888; color: #ccc; }
+
+/* ACTIVE FOCUS CURSOR (CRITICAL FOR KEYBOARD NAV) */
+.active-tag {
+    border: 2px solid #fff !important;
+    background: #444 !important;
+    color: #fff !important;
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255,255,255,0.8);
+    z-index: 100;
+    position: relative;
+}
+
+/* CONTROLS */
+#controls { padding:15px; background:#0d1117; border-top:1px solid var(--border); display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+button { padding:10px 15px; border-radius:4px; border:1px solid #555; background:transparent; color:#fff; cursor:pointer; font-weight:bold; display:none; font-size:11px; }
+.btn-approve { border-color:var(--green); color:var(--green); } .btn-approve:hover { background:var(--green); color:#000; }
+.btn-deny { border-color:var(--red); color:var(--red); } .btn-deny:hover { background:var(--red); color:#000; }
+.btn-process { border-color:var(--gold); color:var(--gold); } .btn-process:hover { background:var(--gold); color:#000; }
+.btn-restore { border-color:#00e676; color:#00e676; } .btn-restore:hover { background:#00e676; color:#000; }
+.btn-pdf { background:var(--green); color:#000; border:none; display:inline-block; }
+.btn-import { display:inline-block; font-size:11px; padding:4px 8px; border-color:#888; color:#888; } .btn-import:hover { border-color:#fff; color:#fff; }
+
+/* MODAL */
+#import-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; }
+.modal-content { background:#161b22; border:1px solid var(--green); padding:20px; width:400px; border-radius:8px; }
+.file-list { max-height:200px; overflow-y:auto; margin:15px 0; border:1px solid #333; padding:10px; }
+.file-item { display:flex; gap:10px; padding:5px; border-bottom:1px solid #222; font-size:12px; }
