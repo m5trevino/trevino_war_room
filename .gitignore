@@ -1,0 +1,22 @@
+# SECRETS
+.env
+keys.txt
+secrets.json
+
+# SYSTEM
+__pycache__/
+*.pyc
+
+# DATA & ARTIFACTS
+jobs.db
+job_history.json
+blacklist.json
+categorized_tags.json
+input_json/
+done/
+*.pdf
+
+# ENV
+venv/
+.idea/
+.vscode/

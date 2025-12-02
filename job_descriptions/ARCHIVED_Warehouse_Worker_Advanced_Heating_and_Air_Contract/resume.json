@@ -1,0 +1,50 @@
+{
+  "job_title": "Warehouse Worker",
+   "filename_slug": "Warehouse_Worker_Advanced_Heating_and_Air_Contract",
+   "contact": {
+       "name": "MATTHEW TREVINO",
+       "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+       "links": "github.com/m5trevino • linkedin.com/in/matthewtrevino1983"
+   },
+   "summary": "Results-driven logistics professional with 15+ years of experience in warehouse operations, seeking a part-time Warehouse Worker role at Advanced Heating and Air Contractors. Skilled in operating heavy equipment, including forklifts and reach trucks, with a strong background in inventory management, safety regulations, and team collaboration. Proficient in maintaining an organized workspace, with experience in packing, put-away, and unloading shipments. Possesses a valid Forklift Certification and is comfortable with some heavy lifting required.",
+   "skills_sidebar": [
+       "Forklift Operation",
+       "Reach Truck Operation",
+       "Inventory Management",
+       "Warehouse Safety",
+       "Heavy Lifting",
+       "Crane Operation"
+   ],
+   "skills_main": [
+       "Logistics Management",
+       "Warehouse Operations"
+   ],
+   "experience": [
+       {
+           "company": "Van Groningen & Sons, Inc.",
+           "location": "Manteca, CA",
+           "role": "Transportation Coordinator / Logistics Architect",
+           "dates": "Mar 2015 – Oct 2022",
+           "bullets": [
+               "Orchestrated logistics for a high-volume agricultural shipper, managing a fleet of 20+ drivers and 60+ daily outbound shipments.",
+               "Maintained 99% on-time delivery rate to major retailers through rigorous planning and driver management."
+           ]
+       },
+       {
+           "company": "M5 Digital, Inc.",
+           "location": "Turlock, CA",
+           "role": "IT Specialist & Automation Architect",
+           "dates": "Jan 2020 – Present",
+           "bullets": [
+               "Architected and deployed internal automation tools using Python and Selenium to streamline data collection and reporting workflows.",
+               "Implemented secure API authentication protocols to protect sensitive driver and route data."
+           ]
+       }
+   ],
+   "education": [
+       "Associate of Science in Computer Science (In Progress)"
+   ],
+   "certs": [
+       "Forklift Certification"
+   ]
+}

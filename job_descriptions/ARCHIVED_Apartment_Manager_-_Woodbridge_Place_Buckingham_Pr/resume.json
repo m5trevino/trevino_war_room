@@ -1,0 +1,49 @@
+{
+  "job_title": "Apartment Manager - Woodbridge Place",
+   "filename_slug": "Apartment_Manager_-_Woodbridge_Place_Buckingham_Pr",
+   "contact": {
+       "name": "MATTHEW TREVINO",
+       "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+       "links": "github.com/m5trevino • linkedin.com/in/matthewtrevino1983"
+   },
+   "summary": "Results-driven Operations Professional with 15+ years of experience in Logistics Management and IT Automation, seeking an Apartment Manager role at Buckingham Property Management. Skilled in background checks, Spanish, website management, report writing, property management tools, Microsoft Outlook, operations management, and regulatory compliance. Proficient in Yardi, Zoom, and phone communication, with a strong ability to greet customers, perform safety inspections, and manage property showings.",
+   "skills_sidebar": [
+       "Background Checks",
+       "Spanish",
+       "Website Management",
+       "Report Writing",
+       "Property Management Tools",
+       "Microsoft Outlook"
+   ],
+   "skills_main": [
+       "Operations Management",
+       "Regulatory Compliance"
+   ],
+   "experience": [
+       {
+           "company": "M5 Digital, Inc.",
+           "location": "Turlock, CA",
+           "role": "IT Specialist & Automation Architect",
+           "dates": "Jan 2020 – Present",
+           "bullets": [
+               "Architected and deployed internal automation tools using Python and Selenium to streamline data collection and reporting workflows, reducing manual administrative time by 40%.",
+               "Implemented secure API authentication protocols (JWT/Okta) to protect sensitive driver and route data."
+           ]
+       },
+       {
+           "company": "Dispatch It / Instacart / AxleHire",
+           "location": "Sacramento, CA",
+           "role": "Independent Logistics Contractor",
+           "dates": "Jan 2019 – Dec 2024",
+           "bullets": [
+               "Executed high-volume, last-mile delivery operations, maintaining a 4.9+ performance rating through route optimization and superior customer service.",
+               "Leveraged local geographic knowledge to navigate complex delivery windows and solve on-road logistical challenges in real-time."
+           ]
+       }
+   ],
+   "education": [
+       "Associate of Science in Computer Science (In Progress)",
+       "Culinary Arts Program"
+   ],
+   "certs": []
+}

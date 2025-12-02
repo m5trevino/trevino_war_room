@@ -1,0 +1,53 @@
+{
+  "job_title": "Customer Service Representative",
+   "filename_slug": "Customer_Service_Representative_Foodlinx_Inc",
+   "contact": {
+       "name": "MATTHEW TREVINO",
+       "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+       "links": "github.com/m5trevino • linkedin.com/in/matthewtrevino1983"
+   },
+   "summary": "Results-driven Customer Service Representative with 1-2 years of administrative experience, skilled in customer communication, Microsoft Excel, and data entry. Proven ability to build strong customer relationships, with a strong focus on attention to detail and organizational skills. Experienced in supply chain management, ERP systems, and full-time customer service roles, with excellent English language skills and ability to work in a team-oriented environment. Offers a unique blend of technical and interpersonal skills, with experience in sales, administrative tasks, and customer inquiry handling, and a strong desire for growth through hard work and dedication.",
+   "skills_sidebar": [
+       "Customer Service",
+       "Data Entry",
+       "Microsoft Excel",
+       "Supply Chain Management",
+       "ERP Systems",
+       "Attention to Detail",
+       "Organizational Skills",
+       "Team-Oriented",
+       "Sales",
+       "Administrative Tasks"
+   ],
+   "skills_main": [
+       "Strategic Customer Relationship Building",
+       "Technical Troubleshooting and Problem-Solving"
+   ],
+   "experience": [
+       {
+           "company": "M5 Digital, Inc.",
+           "location": "Turlock, CA",
+           "role": "IT Specialist & Automation Architect",
+           "dates": "Jan 2020 – Present",
+           "bullets": [
+               "Architected and deployed internal automation tools using Python and Selenium to streamline data collection and reporting workflows, reducing manual administrative time by 40%.",
+               "Implemented secure API authentication protocols (JWT/Okta) to protect sensitive driver and route data."
+           ]
+       },
+       {
+           "company": "Dispatch It / Instacart / AxleHire",
+           "location": "Sacramento, CA",
+           "role": "Independent Logistics Contractor",
+           "dates": "Jan 2019 – Dec 2024",
+           "bullets": [
+               "Executed high-volume, last-mile delivery operations, maintaining a 4.9+ performance rating through route optimization and superior customer service.",
+               "Leveraged local geographic knowledge to navigate complex delivery windows and solve on-road logistical challenges in real-time."
+           ]
+       }
+   ],
+   "education": [
+       "Associate of Science in Computer Science (In Progress)",
+       "Culinary Arts Program"
+   ],
+   "certs": []
+}

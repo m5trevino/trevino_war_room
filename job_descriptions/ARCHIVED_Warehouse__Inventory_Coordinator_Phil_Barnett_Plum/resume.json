@@ -1,0 +1,60 @@
+{
+  "job_title": "Warehouse & Inventory Coordinator",
+   "filename_slug": "Warehouse__Inventory_Coordinator_Matthew_Trevino",
+   "contact": {
+       "name": "MATTHEW TREVINO",
+       "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+       "links": "github.com/m5trevino • linkedin.com/in/matthewtrevino1983"
+   },
+   "summary": "Results-driven logistics expert with 15+ years of experience in warehouse management, fleet operations, and supply chain optimization. Proven track record of improving efficiency, reducing costs, and ensuring compliance with safety protocols. Skilled in warehouse management systems, computer operation, and equipment repair. Possesses a strong background in materials management, logistics, and supplier management. Holds a valid Driver's License and is available for full-time employment, with a desire for a role that offers paid holidays, health insurance, and dental insurance.",
+   "skills_sidebar": [
+       "Warehouse Management",
+       "Fleet Management",
+       "Logistics Coordination",
+       "Supply Chain Optimization",
+       "Equipment Repair",
+       "Computer Operation",
+       "Materials Management"
+   ],
+   "skills_main": [
+       "Strategic Logistics Planning",
+       "Operational Efficiency Improvement"
+   ],
+   "experience": [
+       {
+           "company": "M5 Digital, Inc.",
+           "location": "Turlock, CA",
+           "role": "IT Specialist & Automation Architect",
+           "dates": "Jan 2020 – Present",
+           "bullets": [
+               "Architected and deployed internal automation tools using Python and Selenium to streamline data collection and reporting workflows, reducing manual administrative time by 40%.",
+               "Implemented secure API authentication protocols (JWT/Okta) to protect sensitive driver and route data."
+           ]
+       },
+       {
+           "company": "Dispatch It / Instacart / AxleHire",
+           "location": "Sacramento, CA",
+           "role": "Independent Logistics Contractor",
+           "dates": "Jan 2019 – Dec 2024",
+           "bullets": [
+               "Executed high-volume, last-mile delivery operations, maintaining a 4.9+ performance rating through route optimization and superior customer service.",
+               "Leveraged local geographic knowledge to navigate complex delivery windows and solve on-road logistical challenges in real-time."
+           ]
+       },
+       {
+           "company": "Van Groningen & Sons, Inc.",
+           "location": "Manteca, CA",
+           "role": "Transportation Coordinator / Logistics Architect",
+           "dates": "Mar 2015 – Oct 2022",
+           "bullets": [
+               "Orchestrated logistics for a high-volume agricultural shipper, managing a fleet of 20+ drivers and 60+ daily outbound shipments.",
+               "Architectural Win: Identified systemic bottlenecks in the manual scheduling process; designed and implemented a custom scheduling system that reduced downtime by 30% and improved fleet utilization."
+           ]
+       }
+   ],
+   "education": [
+       "Associate of Science in Computer Science (In Progress)",
+       "Culinary Arts Program"
+   ],
+   "certs": []
+}
