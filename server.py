@@ -18,7 +18,9 @@ HISTORY_FILE = 'job_history.json'
 TAGS_FILE = 'categorized_tags.json'
 BLACKLIST_FILE = 'blacklist.json'
 RESUME_FILE = 'master_resume.txt'
+SCRAPE_DIR = 'scrapes'
 
+# --- SESSION TRACKER ---
 SESSION_STATS = {"scraped":0, "approved":0, "denied":0, "sent_to_groq":0}
 
 keys_raw = os.getenv("GROQ_KEYS", "")
@@ -65,6 +67,12 @@ def update_history(key, amount=1):
 def sanitize_filename(title):
     return "".join(c for c in title if c.isalnum() or c in " -_").strip()[:50]
 
+print("--- WAR ROOM ONLINE ---")
+print(f"KEYS LOADED: {len(KEY_DECK)}")
+print(f"DATABASE: {DB_FILE}")
+
+# --- ROUTES ---
+
 @app.route('/api/status')
 def status():
     h = load_json(HISTORY_FILE, {"all_time":{}})
@@ -90,9 +98,13 @@ def jobs():
         out = []
         for r in rows:
             safe_title = sanitize_filename(r['title'])
+            # Check for AI artifact in input_json (no move logic anymore)
             has_ai = os.path.exists(f"input_json/{safe_title}_{r['id']}.json")
+            # Check for PDF in done
             has_pdf = os.path.exists(f"done/{safe_title}_{r['id']}.pdf")
+            
             if status_filter == 'DELIVERED' and not has_pdf: continue
+                
             out.append({
                 "id": r['id'], "title": r['title'], "company": r['company'],
                 "city": r['city'], "pay": r['pay_fmt'], "freshness": r['date_posted'], 
@@ -159,9 +171,6 @@ def process_job():
     
     try:
         key = get_next_key()
-        if not key: 
-            print("ERROR: No API Key found.")
-            return jsonify({"error": "No Keys in Deck"}), 500
         client = Groq(api_key=key)
         completion = client.chat.completions.create(
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
@@ -176,9 +185,7 @@ def process_job():
         with open(filename, 'w') as f: f.write(result)
         update_history('sent_to_groq')
         return jsonify({"status": "processed", "key": key[:10], "file_saved": filename})
-    except Exception as e: 
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/api/approve', methods=['POST'])
 def approve():
@@ -233,10 +240,17 @@ def get_artifact():
 
 @app.route('/api/scrapes', methods=['GET'])
 def list_scrapes():
-    all_files = glob.glob("*.json")
-    exclude = [HISTORY_FILE, TAGS_FILE, BLACKLIST_FILE, "package.json", "tsconfig.json"]
-    valid = [f for f in all_files if f not in exclude and "input_json" not in f]
-    return jsonify(valid)
+    # Force Absolute Path Logic
+    folder = os.path.join(os.getcwd(), SCRAPE_DIR)
+    
+    if not os.path.exists(folder):
+        print(f"DEBUG: Folder missing: {folder}")
+        os.makedirs(folder)
+        return jsonify([])
+    
+    files = [f for f in os.listdir(folder) if f.lower().endswith('.json')]
+    print(f"DEBUG: Scanning {folder} -> Found: {len(files)} files")
+    return jsonify(files)
 
 @app.route('/api/migrate', methods=['POST'])
 def run_migration():
@@ -259,7 +273,4 @@ def index(): return send_from_directory('templates', 'index.html')
 def send_static(path): return send_from_directory('static', path)
 
 if __name__ == "__main__":
-    print(f"\n--- WAR ROOM ONLINE ---")
-    print(f"KEYS LOADED: {len(KEY_DECK)}")
-    print(f"DATABASE: {DB_FILE}\n")
     app.run(port=5000, debug=False)
