@@ -1,0 +1,60 @@
+{
+  "filename_slug": "Prep_Cook_Healthcare_Services_Group_Trevino",
+   "contact": {
+       "name": "MATTHEW TREVINO",
+       "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+       "links": "linkedin.com/in/matthewtrevino1983 • github.com/m5trevino"
+   },
+   "job_title": "Prep Cook",
+   "summary": "A highly skilled and versatile culinary professional with a unique blend of food preparation, logistics, and operations expertise. Proven track record of delivering high-quality results in fast-paced kitchen environments. Possesses a strong foundation in food safety, sanitation, and menu design. Utilized skills in workflow optimization and P/L management to drive efficiency and profitability in previous roles. Proficient in menu design, food handling, and meal preparation, with a strong focus on customer satisfaction and team collaboration.",
+   "skills_sidebar": [
+       "Menu Design",
+       "Food Handling",
+       "Hourly Pay",
+       "Window Cleaning",
+       "Meal Preparation",
+       "Food Safety",
+       "Sanitation",
+       "Inventory Management",
+       "Team Collaboration"
+   ],
+   "education": [
+       "Culinary Arts Program, Placer County Adult Education"
+   ],
+   "certs": [
+       "ServSafe or Food Handler certification"
+   ],
+   "experience": [
+       {
+           "role": "Operations Technician",
+           "company": "Hilmar Dairy",
+           "location": "Hilmar, CA",
+           "dates": "Jan 2003 - Apr 2003",
+           "bullets": [
+               "Operated heavy agricultural machinery in a 24/7 biological manufacturing environment",
+               "Managed feedstock logistics, processing raw materials into Total Mixed Ration (TMR) with precision",
+               "Directed livestock movement and herd management, ensuring efficient process flow within the facility"
+           ]
+       },
+       {
+           "role": "Logistics & Delivery Specialist",
+           "company": "Rent-A-Center / Pizza Hut",
+           "location": "Turlock, CA",
+           "dates": "Jun 2000 - Oct 2000",
+           "bullets": [
+               "Executed last-mile delivery operations for consumer goods and food service",
+               "Developed foundational skills in route optimization, customer service, and inventory preparation"
+           ]
+       }
+   ],
+   "skills_main": [
+       "Food Preparation",
+       "Logistics",
+       "Operations",
+       "Menu Design",
+       "Food Safety",
+       "Sanitation",
+       "Inventory Management",
+       "Team Collaboration"
+   ]
+}

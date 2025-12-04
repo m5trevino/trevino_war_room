@@ -2,13 +2,12 @@ from flask import Flask, jsonify, request, send_from_directory
 import sqlite3
 import json
 import os
-import random
 import glob
 import traceback
 from datetime import datetime
-from groq import Groq
 from dotenv import load_dotenv
 import migration_engine
+import ai_engine  # IMPORT THE BRAIN
 
 load_dotenv()
 
@@ -22,24 +21,6 @@ SCRAPE_DIR = 'scrapes'
 
 # --- SESSION TRACKER ---
 SESSION_STATS = {"scraped":0, "approved":0, "denied":0, "sent_to_groq":0}
-
-keys_raw = os.getenv("GROQ_KEYS", "")
-KEY_DECK = []
-for item in keys_raw.split(","):
-    if ":" in item: KEY_DECK.append(item.split(":", 1)[1])
-    elif item.strip(): KEY_DECK.append(item.strip())
-random.shuffle(KEY_DECK)
-current_key_index = 0
-
-def get_next_key():
-    global current_key_index
-    if not KEY_DECK: return os.getenv("GROQ_API_KEY", "")
-    if current_key_index >= len(KEY_DECK):
-        random.shuffle(KEY_DECK)
-        current_key_index = 0
-    key = KEY_DECK[current_key_index]
-    current_key_index += 1
-    return key
 
 def get_db():
     conn = sqlite3.connect(DB_FILE)
@@ -68,7 +49,6 @@ def sanitize_filename(title):
     return "".join(c for c in title if c.isalnum() or c in " -_").strip()[:50]
 
 print("--- WAR ROOM ONLINE ---")
-print(f"KEYS LOADED: {len(KEY_DECK)}")
 print(f"DATABASE: {DB_FILE}")
 
 # --- ROUTES ---
@@ -98,9 +78,7 @@ def jobs():
         out = []
         for r in rows:
             safe_title = sanitize_filename(r['title'])
-            # Check for AI artifact in input_json (no move logic anymore)
             has_ai = os.path.exists(f"input_json/{safe_title}_{r['id']}.json")
-            # Check for PDF in done
             has_pdf = os.path.exists(f"done/{safe_title}_{r['id']}.pdf")
             
             if status_filter == 'DELIVERED' and not has_pdf: continue
@@ -157,6 +135,7 @@ def process_job():
     row = conn.execute("SELECT raw_json, title FROM jobs WHERE id=?", (job_id,)).fetchone()
     conn.close()
     
+    # 1. Gather Intelligence
     job_data = json.loads(row['raw_json'])
     try:
         with open(RESUME_FILE, 'r') as f: resume_text = f.read()
@@ -164,28 +143,22 @@ def process_job():
     
     job_desc = job_data.get('description', {}).get('text', '')
     tags_db = load_json(TAGS_FILE, {})
-    quals = ", ".join(tags_db.get('qualifications', []))
-    skills = ", ".join(tags_db.get('skills', []))
     
-    prompt = f"RESUME:\n{resume_text}\n\nMY QUALIFICATIONS: {quals}\nMY SKILLS: {skills}\n\nJOB:\n{job_desc}\n\nTASK: Return JSON tailored resume."
-    
+    # 2. Execute AI Engine (Parker Lewis)
     try:
-        key = get_next_key()
-        client = Groq(api_key=key)
-        completion = client.chat.completions.create(
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            response_format={"type": "json_object"}
-        )
-        result = completion.choices[0].message.content
+        result_json, key_used = ai_engine.generate_resume(resume_text, job_desc, tags_db)
+        
         if not os.path.exists('input_json'): os.makedirs('input_json')
         safe_title = sanitize_filename(row['title'])
         filename = f"input_json/{safe_title}_{job_id}.json"
-        with open(filename, 'w') as f: f.write(result)
+        
+        with open(filename, 'w') as f: f.write(result_json)
+        
         update_history('sent_to_groq')
-        return jsonify({"status": "processed", "key": key[:10], "file_saved": filename})
-    except Exception as e: return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "processed", "key": key_used[:10], "file_saved": filename})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/approve', methods=['POST'])
 def approve():
@@ -240,14 +213,11 @@ def get_artifact():
 
 @app.route('/api/scrapes', methods=['GET'])
 def list_scrapes():
-    # Force Absolute Path Logic
     folder = os.path.join(os.getcwd(), SCRAPE_DIR)
-    
     if not os.path.exists(folder):
         print(f"DEBUG: Folder missing: {folder}")
         os.makedirs(folder)
         return jsonify([])
-    
     files = [f for f in os.listdir(folder) if f.lower().endswith('.json')]
     print(f"DEBUG: Scanning {folder} -> Found: {len(files)} files")
     return jsonify(files)

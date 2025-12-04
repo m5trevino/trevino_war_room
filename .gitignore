@@ -1,25 +1,5 @@
-# SECRETS
-.env
-keys.txt
-secrets.json
-groq_keys.txt
-
-# SYSTEM
 __pycache__/
-*.pyc
-
-# DATA & ARTIFACTS
+.venv/
+.env
 jobs.db
-job_history.json
-blacklist.json
-categorized_tags.json
-input_json/
-done/
-scrapes/
-*.pdf
-*.log
-
-# ENV
-venv/
-.idea/
-.vscode/
+*.pyc

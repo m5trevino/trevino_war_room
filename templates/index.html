@@ -76,12 +76,41 @@
             </div>
         </div>
 
-        <!-- VIEW 4: FACTORY (AI) -->
+        <!-- VIEW 4: FACTORY (AI) WITH CONFIG ACCORDION -->
         <div id="factory-view">
+            <div id="factory-config">
+                <div id="config-header" onclick="toggleFactoryConfig()">
+                    <span style="color:var(--gold)">[ MISSION PARAMETERS ]</span>
+                    <span id="config-toggle-icon">+</span>
+                </div>
+                <div id="config-body" style="display:none;">
+                    <label>PERSONA LOADOUT:</label>
+                    <select id="persona-select" onchange="loadPersona()"></select>
+                    
+                    <label>SYSTEM PROMPT (IDENTITY):</label>
+                    <textarea id="sys-prompt-area" rows="10"></textarea>
+                    
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <div style="flex:1">
+                            <label>TEMPERATURE:</label>
+                            <input type="number" id="model-temp" step="0.1" min="0" max="1" value="0.6">
+                        </div>
+                        <div style="flex:1">
+                            <label>MODEL:</label>
+                            <select id="model-select">
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                                <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                                <option value="gemma-7b-it">Gemma 7B</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="factory-desc">Job Description...</div>
             <div id="factory-terminal">
                 > SYSTEM READY.
-                > SELECT A TARGET TO PROCESS.
+                > SELECT A TARGET.
+                > CONFIGURE MISSION PARAMETERS.
             </div>
         </div>
 

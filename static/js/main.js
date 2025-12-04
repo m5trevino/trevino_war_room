@@ -1,12 +1,49 @@
 let jobList = [], currentJobId = null, currentTab = 'NEW';
-let focusMode = 'LIST'; // 'LIST' or 'TAGS'
-let tagCursorIndex = 0; // Tracks which tag is highlighted
-let currentTags = []; // Stores the currently visible tags/chips
+let focusMode = 'LIST'; 
+let tagCursorIndex = 0; 
+let currentTags = []; 
+let personas = [];
 
 // INITIALIZATION
 document.addEventListener('DOMContentLoaded', () => {
     switchTab('NEW');
+    fetchPersonas();
 });
+
+async function fetchPersonas() {
+    try {
+        personas = await fetch('/api/personas').then(r=>r.json());
+        const sel = document.getElementById('persona-select');
+        if(sel && personas.length > 0) {
+            sel.innerHTML = personas.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+            loadPersona();
+        }
+    } catch(e) { console.log("Persona fetch failed"); }
+}
+
+function loadPersona() {
+    const sel = document.getElementById('persona-select');
+    if(!sel) return;
+    const idx = sel.value;
+    const p = personas[idx];
+    if(p) {
+        document.getElementById('sys-prompt-area').value = p.system_prompt;
+        document.getElementById('model-temp').value = p.temperature;
+        document.getElementById('model-select').value = p.model;
+    }
+}
+
+function toggleFactoryConfig() {
+    const body = document.getElementById('config-body');
+    const icon = document.getElementById('config-toggle-icon');
+    if(body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.innerText = '-';
+    } else {
+        body.style.display = 'none';
+        icon.innerText = '+';
+    }
+}
 
 async function loadJobs() {
     let statusQuery = currentTab;
@@ -21,7 +58,6 @@ async function loadJobs() {
     renderHeader();
     renderList();
     
-    // Reset Focus
     focusMode = 'LIST';
     tagCursorIndex = 0;
     updateFocusVisuals();
@@ -29,13 +65,26 @@ async function loadJobs() {
     if(jobList.length > 0) selectJob(jobList[0].id);
     else {
         clearPanes();
-        document.getElementById('std-desc-box').innerHTML = "SECTOR CLEAR.";
+        const dBox = document.getElementById('std-desc-box');
+        if(dBox) dBox.innerHTML = "SECTOR CLEAR.";
     }
-    updateStats();
+    
+    await updateStats();
     updateControls();
 }
 
-// CRITICAL FIX: Wipe panes to prevent ID collisions (tag-0 vs tag-0)
+async function updateStats() {
+    try {
+        const s = await fetch('/api/status').then(r=>r.json());
+        document.getElementById('s_scraped').textContent = s.session.scraped||0;
+        document.getElementById('s_approved').textContent = s.session.approved||0;
+        document.getElementById('s_denied').textContent = s.session.denied||0;
+        document.getElementById('a_scraped').textContent = s.all_time.scraped||0;
+        document.getElementById('a_approved').textContent = s.all_time.approved||0;
+        document.getElementById('a_denied').textContent = s.all_time.denied||0;
+    } catch(e) { console.log("Stats update failed"); }
+}
+
 function clearPanes() {
     ['std-desc-box', 'std-tags', 'factory-desc', 'refinery-new-tags', 'incinerator-stage', 'resume-content'].forEach(id => {
         const el = document.getElementById(id);
@@ -107,16 +156,13 @@ function switchTab(tab) {
         if(tab === 'DELIVERED' && t.innerText === 'ARMORY') t.classList.add('active');
     });
     
-    // 1. Hide Views
     ['standard-view', 'refinery-view', 'factory-view', 'product-view', 'incinerator-view'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.style.display = 'none';
     });
 
-    // 2. Clear Panes to prevent ID conflicts (The Tag-0 fix)
     clearPanes();
 
-    // 3. Show Target View
     if (tab === 'NEW') document.getElementById('standard-view').style.display = 'flex';
     if (tab === 'DENIED') document.getElementById('incinerator-view').style.display = 'flex';
     if (tab === 'REFINERY') document.getElementById('refinery-view').style.display = 'flex';
@@ -128,6 +174,7 @@ function switchTab(tab) {
 
 function updateControls() {
     document.querySelectorAll('#controls button').forEach(b => b.style.display = 'none');
+    
     if (currentTab === 'NEW') {
         document.getElementById('btn-a').style.display = 'inline-block';
         document.getElementById('btn-d').style.display = 'inline-block';
@@ -150,7 +197,6 @@ async function selectJob(id) {
     document.querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));
     document.getElementById('row-'+id)?.classList.add('active');
     
-    // Always reset cursor on new job
     tagCursorIndex = 0;
 
     if (currentTab === 'DELIVERED') {
@@ -162,7 +208,6 @@ async function selectJob(id) {
     const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
     const job = jobList.find(j=>j.id===id);
 
-    // Incoming
     if (currentTab === 'NEW') {
         document.getElementById('std-desc-box').innerHTML = d.description;
         document.getElementById('std-tags').innerHTML = d.skills.map(s => 
@@ -170,41 +215,35 @@ async function selectJob(id) {
         ).join('');
     }
     
-    // Refinery
     if (currentTab === 'REFINERY') {
         renderRefinery(d.skills);
     }
 
-    // Graveyard / Incinerator
     if (currentTab === 'DENIED') {
         renderIncinerator(job, d.skills);
     }
     
-    // Factory
     if (currentTab === 'FACTORY') {
         document.getElementById('factory-desc').innerHTML = d.description;
-        document.getElementById('factory-terminal').innerText = "> TARGET LOCKED: " + id;
+        const term = document.getElementById('factory-terminal');
+        if(term.innerText.trim() === "") term.innerText = "> SYSTEM READY.";
+        term.innerText += `\n> TARGET LOCKED: ${id}`;
     }
     
     updateVisualCursor();
 }
 
 function renderRefinery(skills) {
-    // If skills passed (initial load), filter them
     if(skills) {
         const unsorted = skills.filter(s => s.category === 'new');
         currentTags = unsorted; 
     }
-    // Else use existing currentTags (re-render after action)
-    
     const container = document.getElementById('refinery-new-tags');
     if(container) {
         container.innerHTML = currentTags.map((t, idx) => 
             `<span id="tag-${idx}" class="skill-tag new">${t.name}</span>`
         ).join('');
     }
-
-    // Only update static cols if skills passed
     if(skills) {
         const q = skills.filter(s => s.category === 'qualifications');
         const s = skills.filter(s => s.category === 'skills');
@@ -216,7 +255,6 @@ function renderRefinery(skills) {
 }
 
 function renderIncinerator(job, skills) {
-    // Initial Load
     if(job && skills) {
         const debris = [];
         debris.push({type: 'company', val: job.company, label: `CORP: ${job.company}`});
@@ -224,8 +262,6 @@ function renderIncinerator(job, skills) {
         skills.forEach(s => debris.push({type: 'tag', val: s.name, label: s.name}));
         currentTags = debris;
     }
-    
-    // Re-Render
     const container = document.getElementById('incinerator-stage');
     if(container) {
         container.innerHTML = currentTags.map((item, idx) => 
@@ -235,15 +271,10 @@ function renderIncinerator(job, skills) {
 }
 
 function updateVisualCursor() {
-    // 1. Remove old highlight
     document.querySelectorAll('.active-tag').forEach(e => e.classList.remove('active-tag'));
-    
-    // 2. Validate Index
     if (focusMode === 'TAGS' && currentTags.length > 0) {
-        if (tagCursorIndex >= currentTags.length) tagCursorIndex = currentTags.length - 1;
+        if (tagCursorIndex >= currentTags.length) tagCursorIndex = Math.max(0, currentTags.length - 1);
         if (tagCursorIndex < 0) tagCursorIndex = 0;
-        
-        // 3. Highlight
         const el = document.getElementById(`tag-${tagCursorIndex}`);
         if (el) {
             el.classList.add('active-tag');
@@ -256,31 +287,16 @@ function updateVisualCursor() {
 function updateFocusVisuals() {
     const left = document.getElementById('job-list-pane');
     const right = document.getElementById('detail-pane');
-    
-    left.style.boxShadow = 'none';
-    left.style.zIndex = '0';
-    right.style.boxShadow = 'none';
-    right.style.zIndex = '0';
-
-    if (focusMode === 'LIST') {
-        left.style.boxShadow = 'inset 0 0 0 2px var(--green)';
-    } else {
-        right.style.boxShadow = 'inset 0 0 0 2px var(--gold)';
-    }
+    left.style.boxShadow = 'none'; left.style.zIndex = '0';
+    right.style.boxShadow = 'none'; right.style.zIndex = '0';
+    if (focusMode === 'LIST') left.style.boxShadow = 'inset 0 0 0 2px var(--green)';
+    else right.style.boxShadow = 'inset 0 0 0 2px var(--gold)';
 }
-
-// --- ACTIONS ---
 
 async function harvestCurrentTag(category) {
     if (focusMode !== 'TAGS' || currentTags.length === 0) return;
     const tag = currentTags[tagCursorIndex];
-    
-    await fetch('/api/harvest_tag', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({tag: tag.name || tag.val, category: category})
-    });
-
+    await fetch('/api/harvest_tag', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag: tag.name || tag.val, category: category})});
     currentTags.splice(tagCursorIndex, 1);
     renderRefinery(null);
     updateVisualCursor();
@@ -289,64 +305,73 @@ async function harvestCurrentTag(category) {
 async function incinerateCurrentItem(typeOverride) {
     if (focusMode !== 'TAGS' || currentTags.length === 0) return;
     const item = currentTags[tagCursorIndex];
-    
     let termToBan = item.val;
-    
     if (typeOverride === 'company') {
         if (item.type !== 'company' && !confirm(`Ban Company: ${item.val}?`)) return;
         termToBan = item.val;
     } else if (typeOverride === 'title') {
         if (item.type !== 'title' && !confirm(`Ban Title: ${item.val}?`)) return;
         termToBan = item.val;
-    } else {
-        // Tag ban
-        termToBan = item.val;
-    }
-
-    await fetch('/api/blacklist', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({term: termToBan})
-    });
-    
-    // Optimistic Removal
+    } else { termToBan = item.val; }
+    await fetch('/api/blacklist', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({term: termToBan})});
     currentTags.splice(tagCursorIndex, 1);
     renderIncinerator(null, null);
     updateVisualCursor();
-    
-    // Note: If you ban a company, you probably want to trigger 'action(deny)' effectively?
-    // Or just visually remove it from the incinerator list so you can keep banning other tags?
-    // Current behavior: Removes from list, ready for next item.
 }
 
 async function action(act) {
     if(!currentJobId) return;
     
     if(act === 'process') {
-         const res = await fetch('/api/process_job', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentJobId})});
-         const data = await res.json();
-         if(data.status==='processed') { alert("DEPLOYED."); loadJobs(); }
+         const sysPrompt = document.getElementById('sys-prompt-area').value;
+         const temp = document.getElementById('model-temp').value;
+         const model = document.getElementById('model-select').value;
+         
+         const term = document.getElementById('factory-terminal');
+         term.innerText += "\n> DEPLOYING PARKER LEWIS PROTOCOL...";
+         term.innerText += "\n> THIS MAY TAKE 10-20 SECONDS...";
+         
+         try {
+             const res = await fetch('/api/process_job', {
+                 method:'POST',
+                 headers:{'Content-Type':'application/json'},
+                 body:JSON.stringify({
+                     id:currentJobId,
+                     system_prompt: sysPrompt,
+                     temperature: temp,
+                     model: model
+                 })
+             });
+             const data = await res.json();
+             
+             if(data.status==='processed') { 
+                 term.innerText += "\n> JSON ACQUIRED.";
+                 term.innerText += "\n> PDF GENERATED.";
+                 term.innerText += "\n> ASSET MOVED TO ARMORY.";
+                 alert("SUCCESS: PDF GENERATED AND SENT TO ARMORY."); 
+                 loadJobs(); 
+             } else {
+                 term.innerText += "\n> ERROR: " + JSON.stringify(data);
+             }
+         } catch(e) {
+             term.innerText += "\n> CRITICAL FAILURE: " + e;
+         }
          return;
     }
 
     const endpoint = {'approve':'/api/approve', 'deny':'/api/deny', 'restore':'/api/restore'}[act];
     await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentJobId})});
-    
     const idx = jobList.findIndex(j=>j.id===currentJobId);
     if(idx > -1) {
         jobList.splice(idx, 1);
         document.getElementById('row-'+currentJobId).remove();
         if(jobList[idx]) selectJob(jobList[idx].id);
         else if(jobList[idx-1]) selectJob(jobList[idx-1].id);
-        else {
-             currentJobId = null;
-             clearPanes();
-        }
+        else { currentJobId = null; clearPanes(); }
     }
     updateStats();
 }
 
-// BATCH & UTILS
 function toggleAll(source) { document.querySelectorAll('.job-check').forEach(c => c.checked = source.checked); }
 async function processAll() {
     if(!confirm("Process ALL?")) return;
@@ -374,17 +399,14 @@ function openPDF() {
     window.open(`/done/${j.safe_title}_${j.id}.pdf`, '_blank');
 }
 
-// KEYBOARD LISTENER
 document.addEventListener('keydown', e => {
     if(document.getElementById('import-modal').style.display === 'flex') return;
-
     if (e.key === 'Tab') {
         e.preventDefault();
         focusMode = (focusMode === 'LIST') ? 'TAGS' : 'LIST';
         updateVisualCursor();
         return;
     }
-
     if (e.key.startsWith('Arrow')) {
         if (focusMode === 'LIST') {
             e.preventDefault();
@@ -399,9 +421,7 @@ document.addEventListener('keydown', e => {
         }
         return;
     }
-
     const k = e.key.toLowerCase();
-    
     if (focusMode === 'LIST') {
         if (currentTab === 'NEW') {
             if (k === 'a') action('approve');
@@ -410,13 +430,11 @@ document.addEventListener('keydown', e => {
         if (currentTab === 'DENIED' && k === 'r') action('restore');
         if (currentTab === 'FACTORY' && k === 'p') action('process');
     }
-
     if (currentTab === 'REFINERY' && focusMode === 'TAGS') {
         if (k === 'q') harvestCurrentTag('qualifications');
         if (k === 's') harvestCurrentTag('skills');
         if (k === 'b') harvestCurrentTag('benefits');
     }
-
     if (currentTab === 'DENIED' && focusMode === 'TAGS') {
         if (k === 'c') incinerateCurrentItem('company');
         if (k === 't') incinerateCurrentItem('title');
