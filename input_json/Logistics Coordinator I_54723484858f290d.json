@@ -1,0 +1,60 @@
+{
+  "name": "Matthew Trevino",
+   "contact": {
+      "address": "Turlock, CA 95380",
+      "phone": "(209) 417-1983",
+      "email": "mtrevino1983@gmail.com",
+      "linkedin": "linkedin.com/in/matthewtrevino1983",
+      "github": "github.com/m5trevino"
+   },
+   "summary": "Highly skilled Systems Architect and Operations Professional with 15+ years of experience in Logistics Management and IT Automation, possessing a unique blend of technical and business acumen.",
+   "technicalSkills": {
+      "automation": ["Python", "Selenium", "Bash", "REST API Integration", "Regex", "Web Scraping"],
+      "systemsAdministration": ["Linux (Ubuntu/RHEL)", "Windows (XP-11)", "Apache", "Docker", "Office 365 Admin", "Active Directory"],
+      "logisticsSoftware": ["TMS", "CRM", "Load Boards (DAT)", "Fleet Tracking"],
+      "securityCompliance": ["API Security (JWT/Okta)", "Vulnerability Analysis (OpenVAS)", "DOT Regulations", "KYC/AML Protocols", "Food Safety (SQF/HACCP/GMP)"],
+      "productivity": ["Microsoft Office Suite (Advanced Excel)", "Jira", "Confluence"]
+   },
+   "workExperience": [
+      {
+         "company": "M5 Digital, Inc.",
+         "position": "IT Specialist & Automation Architect",
+         "dates": "Jan 2020 – Present",
+         "achievements": [
+            "Architected and deployed internal automation tools using Python and Selenium, reducing manual administrative time by 40%",
+            "Implemented secure API authentication protocols (JWT/Okta) to protect sensitive driver and route data"
+         ]
+      },
+      {
+         "company": "Dispatch It / Instacart / AxleHire",
+         "position": "Independent Logistics Contractor",
+         "dates": "Jan 2019 – Dec 2024",
+         "achievements": [
+            "Executed high-volume, last-mile delivery operations, maintaining a 4.9+ performance rating through route optimization and superior customer service"
+         ]
+      },
+      {
+         "company": "Van Groningen & Sons, Inc.",
+         "position": "Transportation Coordinator / Logistics Architect",
+         "dates": "Mar 2015 – Oct 2022",
+         "achievements": [
+            "Orchestrated logistics for a high-volume agricultural shipper, managing a fleet of 20+ drivers and 60+ daily outbound shipments",
+            "Designed and implemented a custom scheduling system, reducing downtime by 30% and improving fleet utilization"
+         ]
+      }
+   ],
+   "education": {
+      "degree": "Associate of Science in Computer Science (In Progress)",
+      "institution": "Modesto Junior College, Modesto, CA"
+   },
+   "projects": [
+      {
+         "name": "Sasha",
+         "description": "Advanced Security Analysis Tool (Python/Flask/Docker)"
+      },
+      {
+         "name": "Peacock Memory",
+         "description": "AI Context Management System using ChromaDB vector storage"
+      }
+   ]
+}

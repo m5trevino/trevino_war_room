@@ -1,0 +1,229 @@
+{
+  "contact":{
+      "name":"Matthew Trevino",
+      "info":{
+         "address":"Turlock, CA 95380",
+         "phone":"(209) 417-1983",
+         "email":"mtrevino1983@gmail.com"
+      },
+      "links":{
+         "linkedin":"linkedin.com/in/matthewtrevino1983",
+         "github":"github.com/m5trevino"
+      }
+   },
+   "summary":"Transformational Logistics Architect driven to optimize high-pressure operations. Expertise in Logistics Management, IT Automation, and Systems Architecture. Proven track record of delivering 30%+ efficiency gains and 99%+ on-time delivery rates.",
+   "skills_sidebar":[
+      "Automation & Scripting",
+      "Systems Administration",
+      "Logistics Software",
+      "Security & Compliance",
+      "Productivity"
+   ],
+   "skills_main":[
+      "Python",
+      "Selenium",
+      "Bash",
+      "REST API Integration",
+      "Regex",
+      "Web Scraping",
+      "Linux (Ubuntu/RHEL)",
+      "Windows (XP-11)",
+      "Apache",
+      "Docker",
+      "Office 365 Admin",
+      "Active Directory",
+      "TMS (Transportation Management Systems)",
+      "CRM (Customer Relationship Management)",
+      "Load Boards (DAT)",
+      "Fleet Tracking",
+      "API Security (JWT/Okta)",
+      "Vulnerability Analysis (OpenVAS)",
+      "DOT Regulations",
+      "KYC/AML Protocols",
+      "Food Safety (SQF/HACCP/GMP)",
+      "Microsoft Office Suite (Advanced Excel)",
+      "Jira",
+      "Confluence"
+   ],
+   "experience":[
+      {
+         "company":"M5 Digital, Inc.",
+         "location":"Turlock, CA",
+         "role":"IT Specialist & Automation Architect",
+         "dates":"Jan 2020 – Present",
+         "bullets":[
+            "Architected and deployed internal automation tools using Python and Selenium to streamline data collection and reporting workflows, reducing manual administrative time by 40%",
+            "Implemented secure API authentication protocols (JWT/Okta) to protect sensitive driver and route data",
+            "Developed 'Apache Genie,' a Python-based CLI tool to automate server deployment and diagnostics",
+            "Perform comprehensive hardware/software diagnostics and system restorations to ensure business continuity"
+         ]
+      },
+      {
+         "company":"Dispatch It / Instacart / AxleHire",
+         "location":"Sacramento, CA",
+         "role":"Independent Logistics Contractor",
+         "dates":"Jan 2019 – Dec 2024",
+         "bullets":[
+            "Executed high-volume, last-mile delivery operations, maintaining a 4.9+ performance rating through route optimization and superior customer service",
+            "Leveraged local geographic knowledge to navigate complex delivery windows and solve on-road logistical challenges in real-time"
+         ]
+      },
+      {
+         "company":"Van Groningen & Sons, Inc.",
+         "location":"Manteca, CA",
+         "role":"Transportation Coordinator / Logistics Architect",
+         "dates":"Mar 2015 – Oct 2022",
+         "bullets":[
+            "Orchestrated logistics for a high-volume agricultural shipper, managing a fleet of 20+ drivers and 60+ daily outbound shipments",
+            "Architectural Win: Identified systemic bottlenecks in the manual scheduling process; designed and implemented a custom scheduling system that reduced downtime by 30% and improved fleet utilization",
+            "Maintained 99% on-time delivery rate to major retailers (Walmart, Costco) through rigorous planning and driver management",
+            "Managed strict DOT compliance and safety regulations, maintaining audit-ready driver logs and maintenance records"
+         ]
+      },
+      {
+         "company":"Paxful (Independent Venture)",
+         "location":"Remote",
+         "role":"Founder / Chief Risk Officer (Digital Asset Exchange)",
+         "dates":"Jan 2014 – Dec 2014",
+         "bullets":[
+            "Architected and operated a high-volume, peer-to-peer Bitcoin exchange desk, processing significant transaction volume",
+            "Architectural Win: Engineered a 'Trevino Anti-Fraud Protocol' to mitigate chargeback risks",
+            "Integrated third-party APIs (Subuno) for IP intelligence/geolocation, implemented 2FA via SMS verification, and mandated DocuSign legal contracts for identity proofing",
+            "Developed and standardized KYC (Know Your Customer) documentation and SOPs to secure merchant account approval from high-risk payment processors"
+         ]
+      },
+      {
+         "company":"Golden Valley Trucking Corp / Brokerage",
+         "location":"Turlock, CA",
+         "role":"Broker Operations Manager",
+         "dates":"Sep 2012 – Mar 2015",
+         "bullets":[
+            "Managed all brokerage operations, including P&L responsibility, rate negotiation, and carrier relations (network of 500+)",
+            "Engineered automated workflows for load tracking and invoicing, increasing operational efficiency by 25%",
+            "Led the integration of new TMS and CRM software to modernize account management"
+         ]
+      },
+      {
+         "company":"Echo Global Logistics",
+         "location":"Chicago, IL / Remote",
+         "role":"Sales Representative",
+         "dates":"Aug 2011 – Sep 2012",
+         "bullets":[
+            "Provided transportation solutions for shippers using LTL and FTL modes",
+            "Coordinated shipments between dispatch/ops teams and clients to ensure timely delivery"
+         ]
+      },
+      {
+         "company":"T3 Direct Marketing",
+         "location":"Turlock, CA",
+         "role":"Supervising Team Lead (Focus.com Campaign)",
+         "dates":"Mar 2010 – Aug 2011",
+         "bullets":[
+            "Promoted to Team Lead based on a systemic assessment of cognitive strengths (INTP profile) and analytical ability",
+            "Led a team of marketing agents in a B2B lead generation campaign for data services, monitoring performance and optimizing script adherence",
+            "Architectural Win: Demonstrated immediate mastery of sales psychology, outperforming veteran staff in appointment setting upon transfer to the main insurance campaign (leading to a 'systemic immune response' dismissal for disrupting the status quo)"
+         ]
+      },
+      {
+         "company":"Empty Trucks / Trevino Trucking, LLC",
+         "location":"Turlock, CA",
+         "role":"Business Operations Manager",
+         "dates":"Nov 2005 – Mar 2010",
+         "bullets":[
+            "Oversaw all operations for a trucking company and freight brokerage, including load booking, carrier sourcing, and driver management",
+            "Architectural Win: In 2006, architected and deployed a corporate VoIP call center system using an Epygi appliance",
+            "Configured call routing, hold music, and Computer Telephony Integration (CTI) years before it was industry standard for small businesses"
+         ]
+      },
+      {
+         "company":"Pops Bargain Outlet",
+         "location":"Turlock, CA",
+         "role":"IT Systems Implementation Lead / Warehouse Associate",
+         "dates":"July 2004 – Nov 2005",
+         "bullets":[
+            "Executed daily logistics, truck unloading, and inventory sorting",
+            "Architectural Win: Identified the inefficiency of manual pricing; single-handedly architected and deployed the store's first UPC-based Point-of-Sale (POS) system",
+            "Built the product database from scratch, entered all UPC data, and automated the checkout process, eliminating pricing errors and enabling real-time inventory tracking"
+         ]
+      },
+      {
+         "company":"Directline Technologies",
+         "location":"Turlock, CA",
+         "role":"Professional Fundraiser",
+         "dates":"Apr 2003 – July 2004",
+         "bullets":[
+            "Conducted high-volume outbound fundraising calls for universities",
+            "Mastered the use of scripting and CRM systems to manage donor records and maximize contribution rates"
+         ]
+      },
+      {
+         "company":"Hilmar Dairy",
+         "location":"Hilmar, CA",
+         "role":"Dairy Operations Technician",
+         "dates":"Jan 2003 – Apr 2003",
+         "bullets":[
+            "Operated heavy agricultural machinery (tractors, feed mixers) in a 24/7 biological manufacturing environment",
+            "Managed feedstock logistics, processing raw materials (hay bales) into Total Mixed Ration (TMR) with precision",
+            "Directed livestock movement and herd management, ensuring efficient process flow within the facility"
+         ]
+      },
+      {
+         "company":"Collectech Systems",
+         "location":"Westlake Village, CA",
+         "role":"Financial Systems Analyst & Top Collector",
+         "dates":"Mar 2002 – Aug 2002",
+         "bullets":[
+            "Achieved #1 ranking on the floor within the first month by re-architecting the collection process",
+            "Architectural Win: Identified a loophole in the accounting rules regarding post-dated checks; designed a 'Credit Protection' product to incentivize debtors to set up automated, recurring payment plans via checks, transforming dead accounts into consistent revenue streams"
+         ]
+      },
+      {
+         "company":"Patriot Imaging (Key Data Systems)",
+         "location":"Van Nuys, CA",
+         "role":"Lead Generation Specialist (Apprentice)",
+         "dates":"Nov 2001 – Feb 2002",
+         "bullets":[
+            "Architectural Win: Independently revolutionized the company's lead generation strategy by locating and acquiring the publisher-direct Military Base Directories",
+            "Provided direct access to IMLAC (International Merchant Purchase Authorization Card) holders—the procurement officers—bypassing gatekeepers and enabling a B2G sales pivot",
+            "Gained foundational knowledge of high-pressure sales pipelines, 'Opener/Closer' dynamics, and the psychology of value perception"
+         ]
+      },
+      {
+         "company":"Rent-A-Center / Pizza Hut",
+         "location":"Turlock, CA",
+         "role":"Logistics & Delivery Specialist",
+         "dates":"Jun 2000 – Oct 2000",
+         "bullets":[
+            "Executed last-mile delivery operations for consumer goods and food service",
+            "Developed foundational skills in route optimization, customer service, and inventory preparation"
+         ]
+      },
+      {
+         "company":"Prime Shine Car Wash",
+         "location":"Central CA",
+         "role":"Operations Technician",
+         "dates":"Feb 1999 – July 1999",
+         "bullets":[
+            "Managed vehicle throughput and quality control in a high-volume automated car wash system",
+            "Ensured equipment safety and adherence to strict operational protocols"
+         ]
+      },
+      {
+         "company":"Pathos, Inc.",
+         "location":"Online / Remote",
+         "role":"Co-Founder & Systems Architect",
+         "dates":"1997 – 1999",
+         "bullets":[
+            "Architectural Win: At age 14, co-founded a proto-cloud hosting provider; leased data center infrastructure to resell 'Shell Accounts' to the IRC community",
+            "Provided Infrastructure-as-a-Service (IaaS) solutions for persistent identity (BNC) and channel automation (Eggdrop bots)",
+            "Managed Unix/Linux user accounts and system security"
+         ]
+      }
+   ],
+   "education":[
+      "Associate of Science in Computer Science (In Progress)",
+      "Modesto Junior College, Modesto, CA",
+      "Coursework: Networking Essentials, Unix/Linux Administration, Programming.",
+      "Culinary Arts Program, Placer County Adult Education"
+   ]
+}

@@ -1,0 +1,167 @@
+{
+  "Name": "Matthew Trevino",
+   "Address": "Turlock, CA 95380",
+   "Phone": "(209) 417-1983",
+   "Email": "mtrevino1983@gmail.com",
+   "LinkedIn": "linkedin.com/in/matthewtrevino1983",
+   "GitHub": "github.com/m5trevino",
+   "Summary": {
+      "Professional": {
+         "Summary": "Systems Architect and high-level Operations Professional with a unique, dual-core background in Logistics Management and IT Automation.",
+         "Experience": 15
+      }
+   },
+   "Skills": {
+      "Automation": ["Python", "Selenium", "Bash", "REST API Integration", "Regex", "Web Scraping"],
+      "Systems": ["Linux (Ubuntu/RHEL)", "Windows (XP-11)", "Apache", "Docker", "Office 365 Admin", "Active Directory"],
+      "Logistics": ["TMS (Transportation Management Systems)", "CRM (Customer Relationship Management)", "Load Boards (DAT)", "Fleet Tracking"],
+      "Security": ["API Security (JWT/Okta)", "Vulnerability Analysis (OpenVAS)", "DOT Regulations", "KYC/AML Protocols", "Food Safety (SQF/HACCP/GMP)"],
+      "Productivity": ["Microsoft Office Suite (Advanced Excel)", "Jira", "Confluence"]
+   },
+   "Experience": [
+      {
+         "Title": "IT Specialist & Automation Architect",
+         "Company": "M5 Digital, Inc.",
+         "Location": "Turlock, CA",
+         "Duration": "Jan 2020 – Present"
+      },
+      {
+         "Title": "Independent Logistics Contractor",
+         "Company": "Dispatch It / Instacart / AxleHire",
+         "Location": "Sacramento, CA",
+         "Duration": "Jan 2019 – Dec 2024"
+      },
+      {
+         "Title": "Transportation Coordinator / Logistics Architect",
+         "Company": "Van Groningen & Sons, Inc.",
+         "Location": "Manteca, CA",
+         "Duration": "Mar 2015 – Oct 2022"
+      },
+      {
+         "Title": "Founder / Chief Risk Officer",
+         "Company": "Paxful (Independent Venture)",
+         "Location": "Remote",
+         "Duration": "Jan 2014 – Dec 2014"
+      },
+      {
+         "Title": "Broker Operations Manager",
+         "Company": "Golden Valley Trucking Corp / Brokerage",
+         "Location": "Turlock, CA",
+         "Duration": "Sep 2012 – Mar 2015"
+      },
+      {
+         "Title": "Sales Representative",
+         "Company": "Echo Global Logistics",
+         "Location": "Chicago, IL / Remote",
+         "Duration": "Aug 2011 – Sep 2012"
+      },
+      {
+         "Title": "Supervising Team Lead",
+         "Company": "T3 Direct Marketing",
+         "Location": "Turlock, CA",
+         "Duration": "Mar 2010 – Aug 2011"
+      },
+      {
+         "Title": "Business Operations Manager",
+         "Company": "Empty Trucks / Trevino Trucking, LLC",
+         "Location": "Turlock, CA",
+         "Duration": "Nov 2005 – Mar 2010"
+      },
+      {
+         "Title": "IT Systems Implementation Lead / Warehouse Associate",
+         "Company": "Pops Bargain Outlet",
+         "Location": "Turlock, CA",
+         "Duration": "July 2004 – Nov 2005"
+      },
+      {
+         "Title": "Professional Fundraiser",
+         "Company": "Directline Technologies",
+         "Location": "Turlock, CA",
+         "Duration": "Apr 2003 – July 2004"
+      },
+      {
+         "Title": "Dairy Operations Technician",
+         "Company": "Hilmar Dairy",
+         "Location": "Hilmar, CA",
+         "Duration": "Jan 2003 – Apr 2003"
+      },
+      {
+         "Title": "Financial Systems Analyst & Top Collector",
+         "Company": "Collectech Systems",
+         "Location": "Westlake Village, CA",
+         "Duration": "Mar 2002 – Aug 2002"
+      },
+      {
+         "Title": "Lead Generation Specialist",
+         "Company": "Patriot Imaging (Key Data Systems)",
+         "Location": "Van Nuys, CA",
+         "Duration": "Nov 2001 – Feb 2002"
+      },
+      {
+         "Title": "Logistics & Delivery Specialist",
+         "Company": "Rent-A-Center / Pizza Hut",
+         "Location": "Turlock, CA",
+         "Duration": "Jun 2000 – Oct 2000"
+      },
+      {
+         "Title": "Operations Technician",
+         "Company": "Prime Shine Car Wash",
+         "Location": "Central CA",
+         "Duration": "Feb 1999 – July 1999"
+      },
+      {
+         "Title": "Co-Founder & Systems Architect",
+         "Company": "Pathos, Inc.",
+         "Location": "Online / Remote",
+         "Duration": "1997 – 1999"
+      }
+   ],
+   "Education": [
+      {
+         "Institution": "Modesto Junior College",
+         "Coursework": ["Networking Essentials", "Unix/Linux Administration", "Programming"],
+         "Degree": "Associate of Science in Computer Science",
+         "Location": "Modesto, CA"
+      },
+      {
+         "Institution": "Placer County Adult Education",
+         "Coursework": [],
+         "Degree": "Culinary Arts Program",
+         "Location": []
+      }
+   ],
+   "Projects": [
+      {
+         "Title": "Sasha",
+         "Description": "Advanced Security Analysis Tool (Python/Flask/Docker)"
+      },
+      {
+         "Title": "Peacock Memory",
+         "Description": "AI Context Management System using ChromaDB vector storage"
+      },
+      {
+         "Title": "Transfer CLI",
+         "Description": "Python tool for reliable, resumable large-file transfers"
+      },
+      {
+         "Title": "MultiClip",
+         "Description": "Python productivity tool for clipboard management and automation"
+      }
+   ],
+   "Qualifications": {
+      "Degree": "Bachelor’s Degree or an equivalent combination of work experience and education"
+   },
+   "Requirements": {
+      "Aptitude": "Math Aptitude",
+      "Survey": "Culture Index Survey"
+   },
+   "Competencies": {
+      "Interpersonal": "exceptional interpersonal skills",
+      "Independence": "self-starter and ability to work independently",
+      "Conflict Resolution": "ability to handle and resolve internal and external conflicts",
+      "Organization": "organized",
+      "Attention to Detail": "demonstrates attention to detail",
+      "Problem Solving": "ability to develop and maintain a positive working relationship with employees, customer base, fuel suppliers and common carriers",
+      "Math": "above average math aptitude"
+   }
+}

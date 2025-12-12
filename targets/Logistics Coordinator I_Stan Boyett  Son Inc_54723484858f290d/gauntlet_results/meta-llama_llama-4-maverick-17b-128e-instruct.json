@@ -1,0 +1,114 @@
+{
+"name": "Matthew Trevino",
+  "contact": {
+    "phone": "(209) 417-1983",
+    "email": "mtrevino1983@gmail.com",
+    "linkedin": "linkedin.com/in/matthewtrevino1983",
+    "github": "github.com/m5trevino"
+  },
+  "summary": "A Systems Architect and high-level Operations Professional with a unique, dual-core background in Logistics Management and IT Automation.",
+  "skills": {
+    "technical": [
+      "Python",
+      "Selenium",
+      "Bash",
+      "REST API Integration",
+      "Regex",
+      "Web Scraping",
+      "Linux (Ubuntu/RHEL)",
+      "Windows (XP-11)",
+      "Apache",
+      "Docker",
+      "Office 365 Admin",
+      "Active Directory",
+      "TMS (Transportation Management Systems)",
+      "CRM (Customer Relationship Management)",
+      "Load Boards (DAT)",
+      "Fleet Tracking",
+      "API Security (JWT/Okta)",
+      "Vulnerability Analysis (OpenVAS)",
+      "DOT Regulations",
+      "KYC/AML Protocols",
+      "Food Safety (SQF/HACCP/GMP)",
+      "Microsoft Office Suite (Advanced Excel)",
+      "Jira",
+      "Confluence"
+    ],
+    "soft": [
+      "Exceptional interpersonal skills",
+      "Self-starter",
+      "Ability to work independently with minimal supervision",
+      "Conflict resolution",
+      "Organized",
+      "Attention to detail",
+      "Positive working relationship",
+      "Intermediate computer skills"
+    ]
+  },
+  "experience": [
+    {
+      "company": "M5 Digital, Inc.",
+      "title": "IT Specialist & Automation Architect",
+      "dates": "Jan 2020 – Present",
+      "achievements": [
+        "Architected and deployed internal automation tools using Python and Selenium",
+        "Implemented secure API authentication protocols (JWT/Okta)",
+        "Developed 'Apache Genie,' a Python-based CLI tool"
+      ]
+    },
+    {
+      "company": "Dispatch It / Instacart / AxleHire",
+      "title": "Independent Logistics Contractor",
+      "dates": "Jan 2019 – Dec 2024",
+      "achievements": [
+        "Executed high-volume, last-mile delivery operations",
+        "Maintained a 4.9+ performance rating"
+      ]
+    },
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "title": "Transportation Coordinator / Logistics Architect",
+      "dates": "Mar 2015 – Oct 2022",
+      "achievements": [
+        "Orchestrated logistics for a high-volume agricultural shipper",
+        "Identified systemic bottlenecks in the manual scheduling process"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Associate of Science in Computer Science (In Progress)",
+      "institution": "Modesto Junior College",
+      "dates": ""
+    },
+    {
+      "degree": "Culinary Arts Program",
+      "institution": "Placer County Adult Education",
+      "dates": ""
+    }
+  ],
+  "projects": [
+    {
+      "name": "Sasha",
+      "description": "Advanced Security Analysis Tool (Python/Flask/Docker)"
+    },
+    {
+      "name": "Peacock Memory",
+      "description": "AI Context Management System using ChromaDB vector storage"
+    }
+  ],
+  "relevance": {
+    "matching_skills": [
+      "Logistics experience",
+      "IT Automation",
+      "Customer service focused",
+      "Attention to detail",
+      "Ability to work independently"
+    ],
+    "matching_experience": [
+      "Logistics and transportation experience",
+      "IT and automation experience",
+      "Customer service experience"
+    ]
+  }
+}

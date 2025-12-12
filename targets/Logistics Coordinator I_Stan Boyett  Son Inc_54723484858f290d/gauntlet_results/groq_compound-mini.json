@@ -1,0 +1,124 @@
+```json
+{
+    "name": "Matthew Trevino",
+    "contact": {
+        "address": "Turlock, CA 95380",
+        "phone": "(209) 417-1983",
+        "email": "mtrevino1983@gmail.com",
+        "linkedin": "linkedin.com/in/matthewtrevino1983",
+        "github": "github.com/m5trevino"
+    },
+    "summary": "Customer‑service oriented Logistics & IT Operations professional with 15+ years of experience dispatching freight, scheduling drivers, managing inventory, and reconciling invoices across California and Nevada. Proven ability to work independently, maintain meticulous attention to detail, and thrive in fast‑paced, multitask environments. Strong interpersonal skills, solid math aptitude, and advanced Microsoft Office proficiency enable rapid problem‑solving and effective communication with customers, carriers, and internal teams.",
+    "technical_skills": [
+        "Microsoft Office Suite (Excel – advanced formulas & pivot tables, Word, Outlook, PowerPoint)",
+        "Dispatch & Scheduling Software (TMS, Load Boards, custom scheduling tools)",
+        "Inventory Management & Reconciliation",
+        "Data Analysis & Reporting (Excel, Python scripting for automation)",
+        "Customer Relationship Management (CRM) platforms",
+        "Basic API integration (REST, JSON) for order entry and status updates"
+    ],
+    "competencies": [
+        "Exceptional interpersonal and customer‑service skills",
+        "Self‑starter; able to work independently with minimal supervision",
+        "Strong conflict‑resolution and issue‑escalation abilities",
+        "Highly organized with proven attention to detail",
+        "Fast, accurate mathematical calculations and data‑validation",
+        "Ability to manage multiple priorities in a high‑volume environment"
+    ],
+    "work_experience": [
+        {
+            "company": "M5 Digital, Inc.",
+            "location": "Turlock, CA",
+            "position": "IT Specialist & Automation Architect",
+            "dates": "Jan 2020 – Present",
+            "highlights": [
+                "Designed and deployed Python‑based automation tools that reduced manual data‑entry time by 40%, improving order‑processing accuracy for internal logistics teams.",
+                "Implemented secure API authentication (JWT/Okta) to protect driver, route, and inventory data, ensuring compliance with industry regulations.",
+                "Created “Apache Genie,” a CLI utility for rapid server provisioning and diagnostics, enabling the team to resolve infrastructure issues without external support."
+            ]
+        },
+        {
+            "company": "Dispatch It / Instacart / AxleHire",
+            "location": "Sacramento, CA",
+            "position": "Independent Logistics Contractor",
+            "dates": "Jan 2019 – Dec 2024",
+            "highlights": [
+                "Managed end‑to‑end dispatch of last‑mile deliveries, routinely handling 150+ daily delivery orders across California and Nevada.",
+                "Optimized driver routes using real‑time traffic data, consistently achieving a 4.9+ performance rating and on‑time delivery rate above 98%.",
+                "Took inbound customer orders via phone and web portal, entered them into the TMS, and confirmed delivery windows, demonstrating strong phone etiquette and detail orientation."
+            ]
+        },
+        {
+            "company": "Van Groningen & Sons, Inc.",
+            "location": "Manteca, CA",
+            "position": "Transportation Coordinator / Logistics Architect",
+            "dates": "Mar 2015 – Oct 2022",
+            "highlights": [
+                "Scheduled and dispatched a fleet of 20+ drivers for 60+ daily shipments, coordinating with common carriers throughout CA & NV.",
+                "Developed a custom scheduling system that cut downtime by 30% and improved fleet utilization, directly supporting the job’s driver‑scheduling requirement.",
+                "Monitored inventory levels at multiple customer sites, reconciled freight invoices, and reviewed fuel rack pricing to ensure accurate billing.",
+                "Handled on‑call inquiries and issue resolution for drivers and customers, maintaining a professional and calm demeanor under pressure."
+            ]
+        },
+        {
+            "company": "Golden Valley Trucking Corp / Brokerage",
+            "location": "Turlock, CA",
+            "position": "Broker Operations Manager",
+            "dates": "Sep 2012 – Mar 2015",
+            "highlights": [
+                "Automated load‑tracking and invoicing workflows, increasing operational efficiency by 25% and reducing invoice errors.",
+                "Negotiated rates with carriers and maintained a network of 500+ carriers, ensuring reliable delivery capacity for fuel and other commodities.",
+                "Prepared and reviewed daily freight invoices and carrier statements, confirming accuracy before payment."
+            ]
+        },
+        {
+            "company": "Pops Bargain Outlet",
+            "location": "Turlock, CA",
+            "position": "IT Systems Implementation Lead / Warehouse Associate",
+            "dates": "Jul 2004 – Nov 2005",
+            "highlights": [
+                "Architected the store’s first UPC‑based POS system, automating pricing and inventory tracking—an early example of the inventory‑monitoring skill set required for this role.",
+                "Trained staff on the new system, providing clear, customer‑focused support during the transition."
+            ]
+        }
+    ],
+    "education": [
+        {
+            "institution": "Modesto Junior College",
+            "degree": "Associate of Science in Computer Science (In Progress)",
+            "location": "Modesto, CA"
+        },
+        {
+            "institution": "Placer County Adult Education",
+            "program": "Culinary Arts Program",
+            "location": "Placerville, CA"
+        }
+    ],
+    "projects": [
+        {
+            "name": "Sasha",
+            "description": "Advanced security analysis tool built with Python/Flask/Docker; automated data collection and reporting—experience transferable to automating dispatch reports."
+        },
+        {
+            "name": "Peacock Memory",
+            "description": "AI‑driven context‑management system using ChromaDB; showcases ability to design scalable data pipelines."
+        },
+        {
+            "name": "Transfer CLI",
+            "description": "Python utility for reliable, resumable large‑file transfers; demonstrates scripting skill for automating repetitive logistics tasks."
+        },
+        {
+            "name": "MultiClip",
+            "description": "Clipboard‑management productivity tool; reflects focus on efficiency and detail‑oriented workflow design."
+        }
+    ],
+    "additional_information": {
+        "certifications": [
+            "DOT Compliance & Safety Training",
+            "Okta Identity & Access Management (JWT) – Implementation"
+        ],
+        "testing_ready": true,
+        "math_aptitude": "Above average – daily use of complex routing calculations, load weight balancing, and invoice reconciliation."
+    }
+}
+```

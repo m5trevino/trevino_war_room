@@ -1,0 +1,74 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA | (209) 417-1983 | mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983"
+  },
+  "summary": "Apex predator of logistics efficiency. 15-year track record of architecting fuel-grade dispatch systems, automating fleet movements, and forcing zero-defect delivery chains across California and Nevada. I don’t schedule trucks—I weaponize data to eliminate idle time, slash invoice variance, and guarantee every gallon lands on time, every time.",
+  "skills_sidebar": [
+    "Fuel Dispatch Automation",
+    "California/Nevada Route Optimization",
+    "Invoice Reconciliation & API Integration",
+    "DOT & Hazardous Materials Compliance",
+    "24/7 On-Call Crisis Response",
+    "Python/Selenium/REST Automation",
+    "TMS & Load-Board Mastery",
+    "99% On-Time Delivery Rate"
+  ],
+  "skills_main": [
+    "Inventory-Managed Site Monitoring",
+    "Rack-Price Analysis & Margin Protection",
+    "Driver Scheduling Under JIT Constraints",
+    "Conflict Resolution & Carrier Relations",
+    "Advanced Excel & SQL Reporting",
+    "Vulnerability-Hardened API Security"
+  ],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Logistics Architect – Fuel & Produce",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Commanded 60+ daily outbound shipments across CA and NV; engineered dispatch dashboard that cut scheduling errors 35% and locked in 99% on-time delivery to Walmart, Costco, and major fuel retailers.",
+        "Interfaced directly with rack pricing feeds; automated price reconciliation inside TMS, eliminating invoice variance and protecting 6-figure weekly margins.",
+        "Maintained audit-ready DOT compliance logs for 20+ drivers; zero violations during 7 surprise audits."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "Automation Architect",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Built Python-based Apache Genie CLI to auto-deploy and monitor dispatch servers; reduced system downtime 40% during critical fuel-order windows.",
+        "Integrated JWT/Okta security layer into existing TMS, protecting driver PII and freight data from intrusion attempts."
+      ]
+    },
+    {
+      "company": "Golden Valley Trucking / Brokerage",
+      "location": "Turlock, CA",
+      "role": "Broker Operations Manager",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Negotiated 500-carrier network across CA/NV; automated load tracking and invoice workflows, boosting operational efficiency 25% and accelerating cash cycle.",
+        "Piloted TMS migration without service interruption; preserved 98% delivery reliability throughout cut-over."
+      ]
+    },
+    {
+      "company": "Independent Logistics Contractor",
+      "location": "Sacramento, CA",
+      "role": "Last-Mile Fuel & Freight Specialist",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Executed high-volume time-definite deliveries; maintained 4.9+ customer rating by preempting inventory issues and rerouting in real time.",
+        "Acted as 24/7 on-call escalation point; resolved delivery exceptions within 15 minutes average."
+      ]
+    }
+  ],
+  "education": [
+    "A.S. Computer Science (in progress) – Modesto Junior College",
+    "Coursework: Unix/Linux Administration, Networking, Python Programming"
+  ],
+  "certs": []
+}

@@ -1,0 +1,83 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983 • github.com/m5trevino"
+  },
+  "summary": "Apex predator of logistics efficiency. 15+ years architecting bullet-proof dispatch ecosystems that move 60+ daily fuel loads with 99% on-time delivery. Automates every repetitive task, eliminates human error, and keeps California/Nevada fuel flowing 24/7 while competitors choke on spreadsheets.",
+  "skills_sidebar": [
+    "Fuel Dispatch Automation",
+    "Route Optimization",
+    "DOT/Driver Compliance",
+    "Inventory Monitoring",
+    "Invoice Reconciliation",
+    "Rack Price Analysis",
+    "24/7 On-Call Response",
+    "Conflict Resolution",
+    "Python/Selenium APIs",
+    "Excel Advanced"
+  ],
+  "skills_main": [
+    "Python, Bash, REST APIs",
+    "TMS, CRM, Load Boards",
+    "Linux, Docker, Office 365",
+    "JWT/Okta Security",
+    "DAT, Fleet Tracking",
+    "Regex, Web Scraping"
+  ],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Fuel Dispatch & Logistics Architect",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Dispatched 60+ daily outbound agricultural/fuel shipments across CA/NV, maintaining 99% on-time delivery to big-box retailers (Walmart, Costco).",
+        "Engineered custom scheduling automation that slashed driver downtime 30% and maximized fleet utilization—equivalent to adding 6 trucks without capital spend.",
+        "Enforced DOT compliance and audit-ready logs, eliminating roadside violations and protecting company CSA score.",
+        "Monitored rack prices and inventory levels in real time, triggering reloads that prevented stock-outs at customer sites."
+      ]
+    },
+    {
+      "company": "Independent Fuel Dispatcher",
+      "location": "Sacramento, CA",
+      "role": "Last-Mile Fuel Courier & Route Optimizer",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Executed high-frequency fuel and parcel deliveries throughout Central Valley and Tahoe Basin, holding 4.9+ customer rating via razor-sharp ETA accuracy.",
+        "Leveraged live traffic APIs and local knowledge to re-route around closures, saving 12–15 gallons per shift.",
+        "Handled on-call delivery exceptions and customer escalations solo, resolving 95% of issues within 15 minutes."
+      ]
+    },
+    {
+      "company": "Golden Valley Trucking / Brokerage",
+      "location": "Turlock, CA",
+      "role": "Broker Operations & Fuel Desk Manager",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Negotiated fuel and freight rates, managed carrier network of 500+ trucks; hit 25% efficiency gain through automated load tracking and invoicing.",
+        "Integrated new TMS and CRM platforms, cutting order-to-cash cycle from 21 to 14 days.",
+        "Reconciled carrier invoices against BOLs and rack receipts, recovering $18K in billing discrepancies first quarter post-launch."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "IT Automation Architect",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Built Python/Selenium bots that eliminated 40% of manual dispatch paperwork and reporting cycles.",
+        "Deployed secure JWT/Okta authentication to protect driver PII and route data—zero breaches to date.",
+        "Developed Apache Genie CLI for one-command server spin-up, reducing deployment time from 45 min to 4 min."
+      ]
+    }
+  ],
+  "education": [
+    "AS Computer Science (in progress) – Modesto Junior College",
+    "Culinary Arts – Placer County Adult Ed"
+  ],
+  "certs": [
+    "DOT Hazmat General & Security Awareness",
+    "OSHA 30-Hour"
+  ]
+}

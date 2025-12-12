@@ -1,0 +1,78 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983"
+  },
+  "summary": "Apex predator of logistics efficiency. 15+ years architecting bullet-proof transportation ecosystems from last-mile to 60+ truck fleets. Vanquishes DOT risk, cost, and delays with code-grade precision. Known for turning bloated ops into lean, audit-ready machines that never miss a dock time.",
+  "skills_sidebar": [
+    "DOT/FMCSA Compliance",
+    "Fleet Scheduling & Dispatch",
+    "Driver Hiring & Training",
+    "Freight Consolidation",
+    "Safety & DOT Audits",
+    "Route Optimization",
+    "Expense Control",
+    "Vendor Contracting"
+  ],
+  "skills_main": [
+    "Transportation Management Systems (TMS)",
+    "Python Automation",
+    "Excel Analytics",
+    "Linux/Windows Admin",
+    "API Integration",
+    "Regulatory Reporting"
+  ],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Transportation Coordinator / Logistics Architect",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Commanded 20-driver, 60-load/day agricultural fleet; hit 99% on-time delivery to Walmart, Costco, Safeway.",
+        "Engineered custom scheduling system—cut driver downtime 30% and lifted fleet utilization to industry-top quartile.",
+        "Enforced zero-tolerance DOT program—zero fines, zero OOS hits during three federal audits.",
+        "Consolidated multi-stop loads, trimming 12% from annual freight spend."
+      ]
+    },
+    {
+      "company": "Golden Valley Trucking / Brokerage",
+      "location": "Turlock, CA",
+      "role": "Broker Operations Manager",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Owned P&L for 500-carrier brokerage; negotiated rates, slashed cost per mile 8%.",
+        "Automated load tracking & invoicing—boosted back-office throughput 25%.",
+        "Piloted new TMS integration, compressing order-to-cash cycle by 1.5 days."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "IT Specialist & Automation Architect",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Deployed Python/Selenium automations that erased 40% of manual reporting labor.",
+        "Hardened driver data exchange with JWT/Okta—zero breaches to date.",
+        "Built CLI tool ‘Apache Genie’ for push-button server deployment."
+      ]
+    },
+    {
+      "company": "Dispatch It / Instacart / AxleHire",
+      "location": "Sacramento, CA",
+      "role": "Independent Logistics Contractor",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Executed 4.9-star last-mile ops across 40k+ deliveries; real-time route recalcs beat delivery windows 96% of the time."
+      ]
+    }
+  ],
+  "education": [
+    "A.S. Computer Science (in progress) – Modesto Junior College"
+  ],
+  "certs": [
+    "DOT Certified Safety Auditor",
+    "FMCSA Driver Qualification Expert"
+  ]
+}

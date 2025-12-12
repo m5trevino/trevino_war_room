@@ -1,0 +1,64 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983"
+  },
+  "summary": "Night-shift apex dispatcher: 15+ years weaponizing TMW/PeopleNet, Python automation, and DOT/HOS compliance to eliminate deadhead miles, maximize fleet ROI, and keep 150+ bulk tankers moving with surgical precision.",
+  "skills_sidebar": [
+    "TMW Suite",
+    "PeopleNet",
+    "DOT/HOS Audits",
+    "Route Optimization",
+    "Python Automation",
+    "Excel VLOOKUP/Pivot",
+    "Bulk Petroleum Logistics",
+    "Night-Shift 4-on/4-off"
+  ],
+  "skills_main": [
+    "Heavy-Volume Call Routing",
+    "E-Log Compliance Policing",
+    "Fleet Utilization Analytics",
+    "Load Planning & Inventory",
+    "API Scraping for Real-Time Rates",
+    "Incident Escalation Protocols",
+    "Driver Shift Fatigue Management"
+  ],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Transportation Coordinator / Night-Shift Dispatch",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Dispatched 60+ outbound ag-bulk loads nightly; leveraged TMW analog to lock in 99% on-time delivery to Walmart/Costco DCs.",
+        "Automated driver log auditing with Python scripts—cut HOS violations 38%.",
+        "Maintained 20-driver night roster; reduced dwell time 30% via dynamic rerouting around Central Valley fog closures."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "IT Specialist & Automation Architect",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Built REST API bridges between dispatch software and telematics; scraped GPS pings to surface idle-time outliers in real time.",
+        "Hardened authentication with JWT/Okta, protecting 100k+ driver PII records."
+      ]
+    },
+    {
+      "company": "Golden Valley Trucking / Brokerage",
+      "location": "Turlock, CA",
+      "role": "Broker Operations Manager",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Negotiated 500-carrier network; matched bulk liquid hazmat loads inside 15-min window, boosting margin 12%.",
+        "Integrated new TMS, automated rate indexing; trimmed data-entry overhead 25%."
+      ]
+    }
+  ],
+  "education": [
+    "A.S. Computer Science (in progress) – Modesto Junior College"
+  ],
+  "certs": ["DOT Hazmat General & Security Awareness"]
+}

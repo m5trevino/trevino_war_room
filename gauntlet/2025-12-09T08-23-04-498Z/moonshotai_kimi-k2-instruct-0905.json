@@ -1,0 +1,71 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+    "links": ["linkedin.com/in/matthewtrevino1983", "github.com/m5trevino"]
+  },
+  "summary": "Apex predator of logistics efficiency. 15+ years architecting zero-downtime dispatch systems for 60+ daily fuel-equivalent moves across CA/NV. Built automation that slashed scheduling latency 30% and guarantees 99% on-time delivery. Now turning that same surgical precision to fuel dispatch, inventory monitoring, and carrier orchestration—because trucks, dollars, and gallons all move on my command.",
+  "skills_sidebar": [
+    "Dispatch & Routing",
+    "CA/NV Geography",
+    "DOT Compliance",
+    "TMS / Load Boards",
+    "Fuel Rack Pricing",
+    "Invoice Reconciliation",
+    "24/7 On-Call Response"
+  ],
+  "skills_main": [
+    "Python Automation",
+    "Excel Advanced",
+    "REST APIs",
+    "SQL-Like Data Parsing",
+    "Real-Time Inventory Tracking",
+    "Conflict Resolution",
+    "High-Speed Math Aptitude"
+  ],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Transportation Coordinator / Dispatch Architect",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Commanded 20-driver fleet executing 60+ outbound agricultural shipments daily—direct analog to fuel tanker frequency across CA.",
+        "Engineered custom scheduling automation that cut driver downtime 30% and locked in 99% on-time delivery to Walmart/Costco, mirroring fuel retailer SLAs.",
+        "Maintained audit-ready DOT records and resolved real-time delivery exceptions—skills mapped 1:1 to fuel compliance and on-call problem solving."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "IT Specialist & Automation Architect",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Deployed Python/Selenium bots that auto-reconcile delivery data and freight invoices—eliminating 40% of manual clerical labor.",
+        "Built secure API gateways (JWT/Okta) protecting sensitive route and driver data—identical posture required for fuel dispatch systems."
+      ]
+    },
+    {
+      "company": "Independent Logistics Contractor",
+      "location": "Sacramento, CA",
+      "role": "Last-Mile Dispatch Operator",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Self-dispatched 100+ daily stops through traffic-dense CA corridors, sustaining 4.9+ performance rating via ruthless route optimization.",
+        "Handled on-road contingencies and customer escalations in real time—same muscle needed for after-hours fuel delivery calls."
+      ]
+    },
+    {
+      "company": "Broker Operations Manager",
+      "location": "Golden Valley Trucking / Turlock, CA",
+      "role": "Fuel-Equivalent Freight Orchestrator",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Negotiated rates and scheduled 500+ carrier moves/week across CA/NV, managing P&L down to the penny—mirror of rack-price margin control.",
+        "Integrated TMS and automated load-tracking workflows, boosting invoice accuracy and carrier on-time performance 25%."
+      ]
+    }
+  ],
+  "education": ["A.S. Computer Science (in progress) – Modesto Junior College"],
+  "certs": []
+}

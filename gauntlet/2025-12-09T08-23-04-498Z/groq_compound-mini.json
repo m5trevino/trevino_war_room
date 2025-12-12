@@ -1,0 +1,96 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "(209) 417-1983 • mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983 • github.com/m5trevino"
+  },
+  "summary": "Apex predator of logistics efficiency with 15+ years annihilating dispatch chaos, re‑architecting fuel‑delivery pipelines, and delivering 99% on‑time performance. Master of DOT compliance, inventory control, and math‑driven optimization. Thrives alone, dominates fast‑paced environments, and converts inefficiency into profit.",
+  "skills_sidebar": [
+    "Dispatch Optimization",
+    "Fuel Logistics",
+    "Inventory Management",
+    "Customer Service Excellence",
+    "Math‑Driven Analysis"
+  ],
+  "skills_main": [
+    "Python Automation",
+    "API Integration (JWT/Okta)",
+    "TMS & CRM Mastery",
+    "DOT & Safety Compliance",
+    "Advanced Excel & Data Reconciliation",
+    "Route Scheduling (CA/NV)",
+    "Load Board Management (DAT)",
+    "Conflict Resolution",
+    "Independent Problem Solving",
+    "Microsoft Office Suite",
+    "Selenium Web Scraping",
+    "Docker Containerization"
+  ],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Transportation Coordinator / Logistics Architect",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Orchestrated a 20‑driver fleet and 60+ daily shipments for a high‑volume agricultural shipper.",
+        "Engineered a custom scheduling system that cut downtime 30% and lifted fleet utilization to peak levels.",
+        "Maintained a 99% on‑time delivery rate to Walmart, Costco, and other major retailers.",
+        "Enforced DOT compliance with audit‑ready driver logs and maintenance records, eliminating regulatory risk."
+      ]
+    },
+    {
+      "company": "Golden Valley Trucking Corp / Brokerage",
+      "location": "Turlock, CA",
+      "role": "Broker Operations Manager",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Commanded full P&L responsibility, negotiated rates, and cultivated a 500‑carrier network.",
+        "Engineered automated load‑tracking and invoicing workflows, boosting operational efficiency 25%.",
+        "Integrated new TMS and CRM platforms, modernizing account management and data visibility."
+      ]
+    },
+    {
+      "company": "Dispatch It / Instacart / AxleHire",
+      "location": "Sacramento, CA",
+      "role": "Independent Logistics Contractor",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Executed high‑volume last‑mile deliveries across CA/NV, maintaining a 4.9+ performance rating.",
+        "Optimized routes in real time, slashing fuel consumption and on‑call issue resolution time.",
+        "Handled on‑call delivery orders, reconciled freight invoices, and confirmed fuel receipt for every customer."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "IT Specialist & Automation Architect",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Architected Python/Selenium automation that eliminated 40% of manual admin work.",
+        "Implemented JWT/Okta API security, safeguarding driver and route data.",
+        "Built “Apache Genie” CLI tool to spin up servers and diagnostics in seconds."
+      ]
+    },
+    {
+      "company": "Independent IT Consultant",
+      "location": "Remote",
+      "role": "Consultant (2003 – Present)",
+      "dates": "2003 – Present",
+      "bullets": [
+        "Delivered Windows/Linux system hardening, virus eradication, and hardware diagnostics for 20+ repeat clients.",
+        "Developed custom scripts and automation solutions, reinforcing reputation as a go‑to efficiency engineer."
+      ]
+    }
+  ],
+  "education": [
+    "Associate of Science in Computer Science (In Progress) – Modesto Junior College",
+    "Culinary Arts Program – Placer County Adult Education"
+  ],
+  "certs": [
+    "DOT Compliance Certification",
+    "API Security (JWT/Okta) Certified",
+    "Microsoft Office Specialist – Excel",
+    "Advanced Python Automation"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983 • github.com/m5trevino"
+  },
+  "summary": "Apex predator of logistics efficiency. 15+ years architecting bullet-proof dispatch systems for 60+ daily fuel-type moves across CA/NV. Self-taught automation engineer who eliminates human latency—40% admin reduction, 99% OTD. Ready to own your rack-to-retail fuel cycle overnight.",
+  "skills_sidebar": [
+    "Fuel Dispatch (CA/NV)",
+    "Driver Scheduling",
+    "Inventory Monitoring",
+    "Freight Invoice Reconciliation",
+    "Rack Price Review",
+    "24/7 On-Call Fuel Ops",
+    "DOT Compliance",
+    "Microsoft Excel (Advanced)",
+    "Math Aptitude 99th %ile"
+  ],
+  "skills_main": [
+    "Python/Selenium Automation",
+    "TMS/CRM Integration",
+    "REST API & EDI",
+    "Linux/Windows Admin",
+    "Route Optimization",
+    "Conflict Resolution",
+    "JIT Logistics",
+    "Regulatory Compliance"
+  ],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Transportation Coordinator / Dispatch Architect",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Commanded 60+ daily outbound agricultural loads to Walmart/Costco—99% on-time fuel-grade precision across CA/NV.",
+        "Designed custom scheduling engine that cut driver downtime 30% and maximized fleet utilization; replicated for fuel dispatch.",
+        "Maintained audit-ready DOT logs, pre-trip inspections, and maintenance records—zero roadside failures.",
+        "Resolved real-time delivery exceptions; 4.9 carrier score via relentless communication and geographic mastery."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "Automation Architect & 24/7 Ops Engineer",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Built Python/Selenium bots that slashed manual data entry 40%—translates to instant rack-price uploads and invoice reconciliation.",
+        "Deployed secure API layer (JWT/Okta) protecting sensitive driver and route data; fuel fraud surface = 0.",
+        "Architected Apache Genie CLI for one-command server spin-up—keeps dispatch systems alive 99.99% uptime.",
+        "Own after-hours diagnostics; restored critical ops in <15 min."
+      ]
+    },
+    {
+      "company": "Dispatch It / Instacart / AxleHire",
+      "location": "Sacramento, CA",
+      "role": "Independent Last-Mile Dispatcher",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Self-dispatched 150+ stops/day across CA Central Valley—perfect on-time metric via micro-route optimization.",
+        "Handled live customer calls, resolved retain issues, updated delivery confirmations in real time.",
+        "Maintained 4.9+ performance rating—same rigor applied to fuel delivery windows."
+      ]
+    },
+    {
+      "company": "Golden Valley Trucking / Brokerage",
+      "location": "Turlock, CA",
+      "role": "Broker Operations Manager",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Negotiated fuel-type freight rates with 500+ carriers; engineered automated tracking & invoicing, +25% throughput.",
+        "Integrated TMS and CRM—single source of truth for load status and customer visibility."
+      ]
+    }
+  ],
+  "education": [
+    "A.S. Computer Science (in progress) – Modesto Junior College",
+    "Continuous IT Consultant – 20 yrs Windows/Linux/Networking"
+  ],
+  "certs": []
+}
