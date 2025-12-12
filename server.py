@@ -300,7 +300,7 @@ TIME:  {duration:.2f}s
         if not is_gauntlet:
             json_path = os.path.join(t_dir, "resume.json")
             with open(json_path, 'w') as f: f.write(result)
-            trigger_editor(json_path) # TRIGGER EDITOR
+            trigger_editor(json_path); conn = get_db(); conn.execute("UPDATE jobs SET status='DELIVERED' WHERE id=?", (job_id,)); conn.commit(); conn.close();
         else:
             gauntlet_json = os.path.join(campaign_dir, f"{sanitize_filename(row['title'])}_{safe_model}.json")
             with open(gauntlet_json, 'w') as f: f.write(result)
