@@ -1,5 +1,41 @@
+# 1. GENERATE A AGGRESSIVE .gitignore FILE
+cat << 'EOF' > .gitignore
+# --- CORE DATA (DO NOT TRACK) ---
+jobs.db
+job_history.json
+my_skills.json
+master_resume.txt
+
+# --- SCRAPE DUMPS ---
+dataset_*.json
+input_json/
+job_descriptions/
+
+# --- GENERATED ARTIFACTS ---
+targets/
+gauntlet/
+done/
+
+# --- SYSTEM JUNK ---
 __pycache__/
+*.pyc
 .venv/
 .env
-jobs.db
-*.pyc
+*.log
+snippet_*.txt
+EOF
+
+# 2. REMOVE DATA FROM GIT TRACKING (Keep Local Files)
+# This removes them from the "Index" so GitHub forgets them, 
+# but leaves the actual files in your folder so the app doesn't break.
+git rm -r --cached jobs.db job_history.json my_skills.json master_resume.txt dataset_*.json input_json/ job_descriptions/ targets/ gauntlet/ snippet_*.txt .venv/ 2>/dev/null
+
+# 3. STAGE THE CLEANUP
+git add .gitignore
+
+# 4. COMMIT THE PURGE
+git commit -m "SECURE: Purged operational data and artifacts. Repository is now Code-Only."
+
+# 5. FORCE PUSH TO WIPE REMOTE HISTORY
+git push origin main --force
+⚡ DROP
