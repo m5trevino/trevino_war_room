@@ -39,8 +39,8 @@ function renderHeader() {
         h.style.gridTemplateColumns = "1fr 1fr 80px 80px 80px";
         h.innerHTML = `<div>TITLE</div><div>CORP</div><div>PAY</div><div>LOC</div><div>TYPE</div>`;
     } else {
-        h.style.gridTemplateColumns = "30px 1fr 1fr 0.8fr 50px 50px 50px";
-        h.innerHTML = `<div><input type="checkbox" onclick="toggleAll(this)"></div><div>TITLE</div><div>CORP</div><div>CITY</div><div>APPR</div><div>AI</div><div>PDF</div>`;
+        h.style.gridTemplateColumns = "30px 1fr 1fr 1fr 140px"; // Control Cluster
+        h.innerHTML = `<div><input type="checkbox" onclick="toggleAll(this)"></div><div>TITLE</div><div>CORP</div><div>CITY</div><div>CONTROLS</div>`;
     }
 }
 
@@ -68,20 +68,29 @@ function renderList() {
             `;
             return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 1fr 1fr 80px 80px 80px;" onclick="selectJob('${j.id}')">${cols}</div>`;
         } else {
-            const hasAI = j.has_ai ? '<span style="color:#00e676">✔</span>' : '<span style="color:#666">✘</span>';
-            const hasPDF = j.has_pdf ? '<span style="color:#00e676">✔</span>' : '<span style="color:#666">✘</span>';
+            // THE DEPLOYMENT CLUSTER
+            const btnPDF = j.has_pdf 
+                ? `<span class="c-btn" style="border-color:#00e676; color:#00e676;" onclick="window.open('${j.pdf_link}', '_blank'); event.stopPropagation();">PDF</span>` 
+                : `<span class="c-btn" style="border-color:#333; color:#333;">...</span>`;
+            
+            const btnDir = `<span class="c-btn" style="border-color:#ffd700; color:#ffd700;" onclick="openFolder('${j.id}'); event.stopPropagation();">DIR</span>`;
+            
+            const btnJob = `<span class="c-btn" style="border-color:#2196f3; color:#2196f3;" onclick="window.open('${j.job_url}', '_blank'); event.stopPropagation();">JOB</span>`;
+
             cols = `
                 <div onclick="event.stopPropagation()"><input type="checkbox" class="job-check" value="${j.id}"></div>
                 <div style="font-weight:bold;white-space:nowrap;overflow:hidden">${j.title}</div>
                 <div style="color:#ffd700;white-space:nowrap;overflow:hidden">${j.company}</div>
                 <div style="color:#8be9fd">${j.city}</div>
-                <div style="color:#00e676">✔</div>
-                <div>${hasAI}</div>
-                <div>${hasPDF}</div>
+                <div style="display:flex; gap:5px;">${btnPDF}${btnDir}${btnJob}</div>
             `;
-            return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 30px 1fr 1fr 0.8fr 50px 50px 50px;" onclick="selectJob('${j.id}')">${cols}</div>`;
+            return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 30px 1fr 1fr 1fr 140px;" onclick="selectJob('${j.id}')">${cols}</div>`;
         }
     }).join('');
+}
+
+async function openFolder(id) {
+    await fetch('/api/open_folder', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})});
 }
 
 function switchTab(tab) {
@@ -119,6 +128,10 @@ function updateControls() {
         document.getElementById('btn-b').style.display = 'inline-block';
         document.getElementById('btn-g').style.display = 'inline-block';
     }
+    if (currentTab === 'DELIVERED') {
+        document.getElementById('btn-pb').style.display = 'inline-block'; 
+        document.getElementById('btn-d').style.display = 'inline-block'; 
+    }
     if (currentTab === 'DENIED') {
         document.getElementById('btn-r').style.display = 'inline-block';
         document.getElementById('btn-bl').style.display = 'inline-block';
@@ -137,6 +150,23 @@ async function selectJob(id) {
         variants.forEach(v => {
             sel.innerHTML += `<option value="${v}">${v}</option>`;
         });
+        
+        // --- ADD "GO TO TARGET" BUTTON TO DETAIL HEADER ---
+        // We first fetch details to get the URL
+        const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
+        currentJobUrl = d.url;
+
+        // Inject button if not present (or just overwrite header)
+        const header = document.getElementById('product-header');
+        header.innerHTML = `
+            <select id="result-selector" onchange="loadArtifact(this.value)" style="flex:1; margin-right:5px;">
+                <option value="PRIMARY">PRIMARY (LATEST)</option>
+            </select>
+            <button class="btn-link" style="background:var(--blue); color:#fff; border:none; padding:5px 10px; cursor:pointer;" onclick="openJobLink()">GO TO TARGET</button>
+            <button class="btn-save" onclick="saveJSON()">SAVE</button>
+            <button class="btn-pdf" onclick="openPDF()">PDF</button>
+        `;
+
         await loadArtifact("PRIMARY");
         return;
     }
@@ -253,9 +283,8 @@ function log(msg) {
 async function action(act) {
     if(!currentJobId) return;
     
-    // PROCESS SINGLE (Now uses the same visual logic as Batch)
     if (act === 'process') {
-        batchExecute(true); // Call batch logic but for single target
+        batchExecute(true); 
         return;
     }
 
@@ -272,7 +301,6 @@ async function action(act) {
     updateStats();
 }
 
-// BATCH EXECUTION LOGIC (REPAIRED VISUALS)
 async function batchExecute(singleMode=false) {
     let targets = [];
     
@@ -282,13 +310,15 @@ async function batchExecute(singleMode=false) {
     } else {
         const checks = document.querySelectorAll('.job-check:checked');
         if(checks.length === 0) return alert("NO TARGETS SELECTED.");
-        if(!confirm(`EXECUTE BATCH ON ${checks.length} TARGETS?`)) return;
+        if(!confirm(`EXECUTE BATCH AI ON ${checks.length} TARGETS?`)) return;
         targets = Array.from(checks).map(c => c.value);
     }
     
     const term = document.getElementById('factory-terminal');
-    if(!singleMode) term.innerText = `> INITIALIZING BATCH PROTOCOL (${targets.length} TARGETS)...\n`;
-    else term.innerText = `> ENGAGING TARGET: ${currentJobId}...\n`;
+    if(term) {
+        if(!singleMode) term.innerText = `> INITIALIZING BATCH PROTOCOL (${targets.length} TARGETS)...\n`;
+        else term.innerText = `> ENGAGING TARGET: ${currentJobId}...\n`;
+    }
     
     const model = document.getElementById('model-select').value;
     const temp = document.getElementById('temp-slider').value;
@@ -306,18 +336,23 @@ async function batchExecute(singleMode=false) {
             const data = await res.json();
             
             if (data.status === 'success') {
-                // RENDER FULL HTML LOG
+                const row = document.getElementById('row-' + id);
+                if(row) row.remove();
+                const idx = jobList.findIndex(j => j.id === id);
+                if (idx > -1) jobList.splice(idx, 1);
+                
+                let linkHtml = "";
+                if(data.pdf_url) {
+                    linkHtml = `<button style="background:#00e676; color:#000; border:none; padding:5px 10px; font-weight:bold; cursor:pointer; margin-top:5px;" onclick="window.open('${data.pdf_url}', '_blank')">OPEN PDF ASSET</button>`;
+                }
+
                 const html = `
                 <div style="margin-top:20px; border-top: 1px dashed #444; padding-top:10px;">
                     <div style="color:#2196f3; font-weight:bold;">
-                        TARGET: ${id} | MODEL: ${data.model} | KEY: ${data.key} | IP: ${data.ip}
+                        TARGET: ${id} | MOVED TO ARMORY
                     </div>
-                    <div style="color:#888; margin-top:5px;">[>>> SENDING PROMPT >>>]</div>
-                    <div style="color:#ccc; white-space:pre-wrap; margin-bottom:10px;">${data.prompt}</div>
-                    
-                    <div style="color:#ffd700; margin-top:5px;">[<<< RECEIVED RESPONSE <<<]</div>
-                    <div style="color:#00e676; white-space:pre-wrap;">${data.response}</div>
-                    
+                    <div style="color:#00e676; white-space:pre-wrap;">${data.response.substring(0, 100)}...</div>
+                    ${linkHtml}
                     <div style="color:#888; font-size:10px; margin-top:10px;">
                         SAVED TO: ${data.file} | TIME: ${data.duration.toFixed(2)}s
                     </div>
@@ -336,6 +371,38 @@ async function batchExecute(singleMode=false) {
     
     log("<div style='color:#00e676; margin-top:20px; border-top:2px solid #00e676;'> > EXECUTION COMPLETE.</div>");
     loadJobs();
+}
+
+async function batchPDF() {
+    const checks = document.querySelectorAll('.job-check:checked');
+    if(checks.length === 0) return alert("NO TARGETS SELECTED.");
+    if(!confirm(`RE-COMPILE PDFS FOR ${checks.length} TARGETS?`)) return;
+
+    const btn = document.getElementById('btn-pb');
+    const originalText = btn.innerText;
+    btn.innerText = "WORKING...";
+    
+    for (const check of checks) {
+        const id = check.value;
+        try {
+            await fetch("/api/generate_pdf", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({id: id})
+            });
+            const row = document.getElementById('row-'+id);
+            if(row) {
+                row.style.background = "#1a261a"; 
+                setTimeout(() => row.style.background = "", 500);
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+    
+    btn.innerText = originalText;
+    alert("BATCH PDF RE-COMPILE COMPLETE. REFRESHING GRID.");
+    loadJobs(); 
 }
 
 async function runGauntlet() {
@@ -370,25 +437,9 @@ async function runGauntlet() {
             const data = await res.json();
             
             if (data.status === 'success') {
-                const html = `
-                <div style="margin-top:20px; border-top: 1px dashed #444; padding-top:10px;">
-                    <div style="color:#2196f3; font-weight:bold;">
-                        MODEL: ${data.model} | KEY: ${data.key} | IP: ${data.ip}
-                    </div>
-                    <div style="color:#888; margin-top:5px;">[>>> SENDING PROMPT >>>]</div>
-                    <div style="color:#ccc; white-space:pre-wrap; margin-bottom:10px;">${data.prompt}</div>
-                    
-                    <div style="color:#ffd700; margin-top:5px;">[<<< RECEIVED RESPONSE <<<]</div>
-                    <div style="color:#00e676; white-space:pre-wrap;">${data.response}</div>
-                    
-                    <div style="color:#888; font-size:10px; margin-top:10px;">
-                        SAVED TO: ${data.file} | TIME: ${data.duration.toFixed(2)}s
-                    </div>
-                </div>
-                `;
-                log(html);
+                log(`<div style="color:#00e676;">SUCCESS: ${model}</div>`);
             } else {
-                log(`<div style="color:red; margin-top:10px;">!!! FAILURE: ${data.error}</div>`);
+                log(`<div style="color:red;">!!! FAILURE: ${data.error}</div>`);
             }
         } catch (e) {
             log(`<div style="color:red;">!!! NETWORK ERROR: ${e}</div>`);
@@ -430,9 +481,35 @@ async function updateStats() {
     document.getElementById('a_denied').textContent = s.all_time.denied||0;
 }
 
-function openPDF() {
-    const safeTitle = jobList.find(j=>j.id===currentJobId).safe_title;
-    alert("PDF Engine Pending.");
+async function openPDF() {
+    if(!currentJobId) return;
+    const btn = document.querySelector(".btn-pdf");
+    const originalText = btn.innerText;
+    btn.innerText = "GENERATING...";
+    btn.style.background = "#fff";
+    btn.style.color = "#000";
+    
+    try {
+        const res = await fetch("/api/generate_pdf", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({id: currentJobId})
+        });
+        const data = await res.json();
+        
+        if(data.status === "success") {
+            window.open(data.path, "_blank");
+        } else {
+            alert("PDF ERROR: " + data.message);
+        }
+    } catch(e) {
+        alert("NETWORK ERROR: " + e);
+    } finally {
+        btn.innerText = originalText;
+        btn.style.background = "";
+        btn.style.color = "";
+        loadJobs(); 
+    }
 }
 
 async function openImportModal() {

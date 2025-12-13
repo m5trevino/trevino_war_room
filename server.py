@@ -5,13 +5,17 @@ import os
 import random
 import glob
 import traceback
-import textwrap
 import subprocess
 from datetime import datetime
 from groq import Groq
 import httpx
 from dotenv import load_dotenv
-import migration_engine
+
+try:
+    import migration_engine
+    import pdf_engine
+except ImportError as e:
+    print(f"[!] CRITICAL ENGINE IMPORT ERROR: {e}")
 
 load_dotenv()
 
@@ -28,7 +32,7 @@ PROXY_BYPASS_CHANCE = float(os.getenv("PROXY_BYPASS_CHANCE", "0.15"))
 EDITOR_CMD = os.getenv("EDITOR_CMD", "xdg-open")
 SESSION_STATS = {"scraped":0, "approved":0, "denied":0, "sent_to_groq":0}
 
-# --- KEY DECK ENGINE ---
+# --- KEY DECK ---
 class KeyDeck:
     def __init__(self):
         raw = os.getenv("GROQ_KEYS", "")
@@ -42,12 +46,12 @@ class KeyDeck:
                 self.deck.append({"name": "Unknown", "key": item})
         self.shuffle()
         self.cursor = 0
-        print(f"[*] DECK LOADED: {len(self.deck)} Keys ready.")
+        if self.deck: print(f"[*] DECK LOADED: {len(self.deck)} Keys ready.")
+        else: print("[!] WARNING: NO GROQ KEYS LOADED.")
 
     def shuffle(self):
         random.shuffle(self.deck)
         self.cursor = 0
-        print("[*] DECK SHUFFLED.")
 
     def draw(self):
         if not self.deck: return None, None
@@ -59,7 +63,7 @@ class KeyDeck:
 
 deck = KeyDeck()
 
-# --- DATABASE & UTILS ---
+# --- DATABASE ---
 def get_db():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
@@ -100,7 +104,7 @@ def trigger_editor(filepath):
     except Exception as e:
         print(f"[!] Editor Error: {e}")
 
-# --- CORE API ---
+# --- API ---
 @app.route('/api/status')
 def status():
     h = load_json(HISTORY_FILE, {"all_time":{}})
@@ -115,6 +119,7 @@ def jobs():
     if status_filter == 'NEW': query += " AND (status IS NULL OR status = 'NEW')"
     elif status_filter in ['APPROVED', 'REFINERY', 'FACTORY']: query += " AND status = 'APPROVED'"
     elif status_filter == 'DENIED': query += " AND (status = 'DENIED' OR status = 'AUTO_DENIED')"
+    elif status_filter == 'DELIVERED': query += " AND status = 'DELIVERED'"
     
     query += " ORDER BY score DESC, date_posted ASC"
     
@@ -123,15 +128,31 @@ def jobs():
         out = []
         for r in rows:
             t_dir = get_target_dir(r['id'], r['title'], r['company'])
+            
+            # RESOLVE PDF PATH
+            safe_title = sanitize_filename(r['title'])
+            safe_company = sanitize_filename(r['company'])
+            dir_name = f"{safe_title}_{safe_company}_{r['id']}"
+            pdf_web_path = f"/done/{dir_name}/resume.pdf"
+            
             has_ai = os.path.exists(os.path.join(t_dir, "resume.json"))
             has_pdf = os.path.exists(os.path.join(t_dir, "resume.pdf"))
-            if status_filter == 'DELIVERED' and not has_pdf: continue
+            
+            if status_filter == 'DELIVERED' and not (has_ai or has_pdf): continue
+            
+            # ROBUST URL EXTRACTION
+            raw_data = json.loads(r['raw_json'])
+            # Try 'url', then 'link', then 'jobUrl', else '#'
+            job_url = raw_data.get('url') or raw_data.get('link') or raw_data.get('jobUrl') or '#'
+
             out.append({
                 "id": r['id'], "title": r['title'], "company": r['company'],
                 "city": r['city'], "pay": r['pay_fmt'], "freshness": r['date_posted'], 
                 "score": r['score'], "status": r['status'],
                 "has_ai": has_ai, "has_pdf": has_pdf,
-                "safe_title": sanitize_filename(r['title'])
+                "pdf_link": pdf_web_path if has_pdf else None,
+                "job_url": job_url,
+                "safe_title": safe_title
             })
         return jsonify(out)
     except Exception as e: return jsonify([])
@@ -147,7 +168,8 @@ def job_details():
     
     data = json.loads(row['raw_json'])
     desc = data.get('description', {}).get('html') or data.get('description', {}).get('text') or "No Desc"
-    url = data.get('url', '#')
+    # Same extraction logic here
+    url = data.get('url') or data.get('link') or data.get('jobUrl') or '#'
     
     tags_db = load_json(TAGS_FILE, {"qualifications": [], "skills": [], "benefits": [], "ignored": []})
     category_map = {}
@@ -172,7 +194,18 @@ def harvest_tag():
         save_json(TAGS_FILE, tags_db)
     return jsonify({"status": "harvested"})
 
-# --- THE PARKER LEWIS ENGINE ---
+@app.route('/api/open_folder', methods=['POST'])
+def open_folder():
+    id = request.json.get('id')
+    conn = get_db()
+    row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (id,)).fetchone()
+    conn.close()
+    if row:
+        t_dir = get_target_dir(id, row['title'], row['company'])
+        subprocess.Popen(['xdg-open', t_dir]) 
+        return jsonify({"status": "opened"})
+    return jsonify({"status": "error"})
+
 def execute_strike(job_id, model, temp, session_id):
     conn = get_db()
     row = conn.execute("SELECT raw_json, title, company FROM jobs WHERE id=?", (job_id,)).fetchone()
@@ -181,6 +214,7 @@ def execute_strike(job_id, model, temp, session_id):
     
     t_dir = get_target_dir(job_id, row['title'], row['company'])
     is_gauntlet = session_id.startswith("GAUNTLET")
+    is_batch = "BATCH" in session_id
     
     if is_gauntlet:
         gauntlet_base = "gauntlet"
@@ -288,19 +322,35 @@ KEY:   {key_name}
 IP:    {proxy_ip}
 TIME:  {duration:.2f}s
 ================================================================================
-
 [>>> TRANSMISSION (PROMPT) >>>]
 {prompt}
-
 [<<< INTERCEPTION (PAYLOAD) <<<]
 {result}
 """
         with open(filepath, 'w') as f: f.write(log_content)
         
+        pdf_path_out = ""
         if not is_gauntlet:
             json_path = os.path.join(t_dir, "resume.json")
             with open(json_path, 'w') as f: f.write(result)
-            trigger_editor(json_path); conn = get_db(); conn.execute("UPDATE jobs SET status='DELIVERED' WHERE id=?", (job_id,)); conn.commit(); conn.close();
+            
+            # AUTO PDF
+            print(f"[*] AUTO-ENGAGING PDF ENGINE FOR {job_id}...")
+            try:
+                pdf_res = pdf_engine.generate_pdf(job_id)
+                if pdf_res.get('status') == 'success':
+                    pdf_path_out = pdf_res.get('path')
+            except Exception as e:
+                print(f"[!] AUTO-PDF FAIL: {e}")
+
+            if not is_batch:
+                trigger_editor(json_path)
+
+            conn = get_db()
+            conn.execute("UPDATE jobs SET status='DELIVERED' WHERE id=?", (job_id,))
+            conn.commit()
+            conn.close()
+            
         else:
             gauntlet_json = os.path.join(campaign_dir, f"{sanitize_filename(row['title'])}_{safe_model}.json")
             with open(gauntlet_json, 'w') as f: f.write(result)
@@ -315,43 +365,29 @@ TIME:  {duration:.2f}s
             "prompt": prompt,
             "response": result,
             "duration": duration,
-            "file": filepath
+            "file": filepath,
+            "pdf_url": pdf_path_out
         }
         
     except Exception as e:
         duration = (datetime.now() - start_time).total_seconds()
         error_msg = str(e)
-        
-        log_content = f"""
-CRITICAL FAILURE
-MODEL: {model}
-ERROR: {error_msg}
-{traceback.format_exc()}
-"""
+        log_content = f"CRITICAL FAILURE\nMODEL: {model}\nERROR: {error_msg}\n{traceback.format_exc()}"
         with open(filepath, 'w') as f: f.write(log_content)
         return {"status": "failed", "model": model, "error": error_msg}
 
 @app.route('/api/strike', methods=['POST'])
 def api_strike():
     data = request.json
-    res = execute_strike(
-        data['id'], 
-        data['model'], 
-        data.get('temp', 0.7), 
-        data['session_id']
-    )
+    res = execute_strike(data['id'], data['model'], data.get('temp', 0.7), data['session_id'])
     return jsonify(res)
 
 @app.route('/api/process_job', methods=['POST'])
 def process_job():
     session_id = f"BATCH_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     res = execute_strike(request.json['id'], request.json.get('model'), request.json.get('temp', 0.7), session_id)
-    # Note: Editor trigger is handled inside execute_strike
-    if res['status'] == 'success':
-        return jsonify({"status": "success", "model": res['model'], "key": res['key'], "ip": res['ip'], "prompt": res['prompt'], "response": res['response'], "duration": res['duration'], "file": res['file']})
     return jsonify(res)
 
-# ... [KEEP EXISTING ROUTES: approve, deny, restore, blacklist, get_gauntlet_files, get_artifact, get_log, list_scrapes, migrate, index, static, send_done] ...
 @app.route('/api/approve', methods=['POST'])
 def approve():
     conn = get_db()
@@ -394,10 +430,6 @@ def blacklist():
 @app.route('/api/get_gauntlet_files')
 def get_gauntlet_files():
     id = request.args.get('id')
-    conn = get_db()
-    row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (id,)).fetchone()
-    conn.close()
-    if not row: return jsonify([])
     return jsonify([])
 
 @app.route('/api/get_artifact', methods=['POST'])
@@ -419,18 +451,6 @@ def get_artifact():
         with open(json_path, 'r') as f: return jsonify({"content": f.read()})
     return jsonify({"content": "No Artifact"})
 
-@app.route('/api/get_log')
-def get_log():
-    id = request.args.get('id')
-    conn = get_db()
-    row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (id,)).fetchone()
-    conn.close()
-    t_dir = get_target_dir(id, row['title'], row['company'])
-    log_path = os.path.join(t_dir, "full_transmission_log.txt")
-    if os.path.exists(log_path):
-        with open(log_path, 'r') as f: return jsonify({"content": f.read()})
-    return jsonify({"content": "No Log Available."})
-
 @app.route('/api/scrapes', methods=['GET'])
 def list_scrapes():
     all_files = glob.glob("*.json")
@@ -444,14 +464,26 @@ def run_migration():
     try:
         stats = migration_engine.process_files(files)
         SESSION_STATS['scraped'] += stats["new"]
-        h = load_json(HISTORY_FILE, {"all_time":{}})
-        if "scraped" not in h["all_time"]: h["all_time"]["scraped"] = 0
-        h["all_time"]["scraped"] += stats["new"]
-        save_json(HISTORY_FILE, h)
+        update_history('scraped', stats["new"])
         return jsonify({"status": "success", "stats": stats})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/generate_pdf', methods=['POST'])
+def trigger_pdf():
+    try:
+        if not request.json or 'id' not in request.json:
+            return jsonify({"status": "error", "message": "Invalid Payload"})
+        
+        job_id = request.json['id']
+        result = pdf_engine.generate_pdf(job_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"[!] UNHANDLED SERVER CRASH IN PDF ROUTE: {e}")
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": f"SERVER CRASH: {str(e)}"})
 
 @app.route('/')
 def index(): return send_from_directory('templates', 'index.html')
@@ -461,6 +493,5 @@ def send_static(path): return send_from_directory('static', path)
 def send_done(filename): return send_from_directory('targets', filename) 
 
 if __name__ == "__main__":
-    print(f"\n--- WAR ROOM ONLINE (v5.0 PARKER LEWIS + BATCH EDITOR) ---")
-    print(f"DATABASE: {DB_FILE}")
+    print(f"\n--- WAR ROOM ONLINE (v5.6 LINKED IN) ---")
     app.run(port=5000, debug=False)

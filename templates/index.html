@@ -69,6 +69,7 @@
         .btn-restore { border-color:#00e676; color:#00e676; } .btn-restore:hover { background:#00e676; color:#000; }
         .btn-pdf { background:var(--green); color:#000; border:none; display:inline-block; }
         .btn-save { background:var(--blue); color:#fff; border:none; display:inline-block; }
+        .btn-pdf-batch { border-color:#9c27b0; color:#9c27b0; } .btn-pdf-batch:hover { background:#9c27b0; color:#fff; }
         .btn-import { display:inline-block; font-size:11px; padding:4px 8px; border-color:#888; color:#888; } .btn-import:hover { border-color:#fff; color:#fff; }
 
         #import-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; }
@@ -86,7 +87,7 @@
                 <span class="stat-item">OK:<span id="s_approved" class="stat-val-s">0</span></span>
                 <span class="stat-item">NO:<span id="s_denied" class="stat-val-s">0</span></span>
             </div>
-            <div class="stat-block" style="border-left:1px solid #333; padding-left:15px;">
+            <div class="stat-block" style="border-left:1px solid #333; padding:10px; margin-left:10px;">
                 <span style="color:var(--blue)">TOTAL:</span>
                 <span class="stat-item">IN:<span id="a_scraped" class="stat-val-a">0</span></span>
                 <span class="stat-item">OK:<span id="a_approved" class="stat-val-a">0</span></span>
@@ -134,11 +135,11 @@
                 <div class="control-row">
                     <label style="font-size:10px; color:#888;">MODEL:</label>
                     <select id="model-select">
-                        <option value="moonshotai/kimi-k2-instruct" selected>moonshotai/kimi-k2-instruct</option>
+                        <option value="moonshotai/kimi-k2-instruct" selected>moonshotai/kimi-k2-instruct (MOONSHINE)</option>
+                        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
                         <option value="groq/compound">groq/compound</option>
                         <option value="openai/gpt-oss-safeguard-20b">openai/gpt-oss-safeguard-20b</option>
                         <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
-                        <option value="moonshotai/kimi-k2-instruct">moonshotai/kimi-k2-instruct</option>
                         <option value="moonshotai/kimi-k2-instruct-0905">moonshotai/kimi-k2-instruct-0905</option>
                         <option value="qwen/qwen3-32b">qwen/qwen3-32b</option>
                         <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
@@ -178,7 +179,8 @@
             <button class="btn-approve" id="btn-a" onclick="action('approve')">APPROVE (A)</button>
             
             <button class="btn-process" id="btn-p" onclick="action('process')">EXECUTE (1)</button>
-            <button class="btn-batch" id="btn-b" onclick="batchExecute()">BATCH (CHK)</button>
+            <button class="btn-batch" id="btn-b" onclick="batchExecute()">BATCH AI (CHK)</button>
+            <button class="btn-pdf-batch" id="btn-pb" onclick="batchPDF()">RE-PDF (CHK)</button>
             <button class="btn-gauntlet" id="btn-g" onclick="runGauntlet()">RUN GAUNTLET (ALL)</button>
             
             <button class="btn-restore" id="btn-r" onclick="action('restore')">RESTORE</button>
