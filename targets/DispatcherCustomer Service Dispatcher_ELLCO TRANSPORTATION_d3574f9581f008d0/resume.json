@@ -1,0 +1,65 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983 • github.com/m5trevino"
+  },
+  "summary": "Apex predator of logistics efficiency. 15+ years weaponizing data, code, and psychology to annihilate customer friction and SLA breaches. Turned 40k+ last-mile deliveries into 4.9-star domination and built anti-fraud protocols that gutted chargebacks. Now hunting a CSR role to convert every inbound call into a lifetime customer.",
+  "skills_sidebar": [
+    "Dispatching",
+    "CRM Mastery",
+    "Call-Center VoIP",
+    "Real-time Route Optimization",
+    "Customer Psychology",
+    "De-escalation Scripts",
+    "JWT/Okta Security",
+    "Python Automation"
+  ],
+  "skills_main": [
+    "Customer Support",
+    "Sales Quota Crushing",
+    "Active Listening",
+    "CRM Systems",
+    "Multi-tasking",
+    "Time Management",
+    "Documentation"
+  ],
+  "experience": [
+    {
+      "company": "Dispatch It / Instacart / AxleHire",
+      "location": "Sacramento, CA",
+      "role": "Independent Dispatcher & Customer Success Operator",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Fielded 200+ inbound customer calls weekly; resolved delivery exceptions in <90 seconds, sustaining 4.9-star rating.",
+        "Built Python micro-bot to auto-text ETA updates—cut 'Where Is My Order?' calls by 35%.",
+        "Converted 12% of service recovery calls into upsell opportunities, smashing quota 8 quarters straight."
+      ]
+    },
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Transportation Coordinator / Customer Advocate",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Owned carrier & customer communication for 60+ daily outbound shipments; maintained 99% OTIF to Walmart/Costco.",
+        "Designed CRM dashboard trigger alerts—proactive issue flagging boosted customer satisfaction score from 87→96%.",
+        "Negotiated service credits and alternative solutions; retained $1.2M in at-risk annual revenue."
+      ]
+    },
+    {
+      "company": "Echo Global Logistics",
+      "location": "Chicago, IL (Remote)",
+      "role": "Sales & Customer Support Representative",
+      "dates": "Aug 2011 – Sep 2012",
+      "bullets": [
+        "Handled 150+ calls/day—booked LTL/FTL freight while resolving track-and-trace issues in real time.",
+        "Exceeded quarterly sales quota by 130%, earning Top 5% rank among 200+ reps."
+      ]
+    }
+  ],
+  "education": [
+    "Associate of Science in Computer Science (In Progress) – Modesto Junior College"
+  ],
+  "certs": []
+}

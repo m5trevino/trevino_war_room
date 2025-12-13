@@ -1,0 +1,56 @@
+{
+  "contact": {
+    "name": "Matthew Trevino",
+    "info": "Turlock, CA • (209) 417-1983 • mtrevino1983@gmail.com",
+    "links": "linkedin.com/in/matthewtrevino1983 • github.com/m5trevino"
+  },
+  "summary": "Apex predator of logistics efficiency—15+ years weaponizing code, compliance, and cold-blooded route engineering to annihilate cost and downtime. Proven union-night supervisor who turns DOT, HOS, and dispatch data into 99% on-time fleets and 30% lower spend.",
+  "skills_sidebar": ["DOT/FMCSA", "HOS", "MOBI", "Prospero", "Union Labor", "CDL-A", "Night Ops", "Safety KPI"],
+  "skills_main": ["TMS Automation", "Fleet Telematics", "Python/Selenium", "API Integration", "Cost Reduction", "Driver Coaching", "Audit Defense"],
+  "experience": [
+    {
+      "company": "Van Groningen & Sons, Inc.",
+      "location": "Manteca, CA",
+      "role": "Transportation Supervisor / Logistics Architect",
+      "dates": "Mar 2015 – Oct 2022",
+      "bullets": [
+        "Commanded 20-driver union fleet executing 60+ nightly outbound produce loads to Walmart, Costco, Safeway with 99% OTD; engineered Python-TMS bridge eliminating 30% dock idle.",
+        "Deployed safety playbook aligned to DOT §395 HOS; zero roadside violations during last 3 audits, cutting insurance premium 11%.",
+        "Negotiated union labor allocation and time-&-attendance rules; reduced overtime 18% while maintaining service levels."
+      ]
+    },
+    {
+      "company": "M5 Digital, Inc.",
+      "location": "Turlock, CA",
+      "role": "Night Shift Automation Architect (IT)",
+      "dates": "Jan 2020 – Present",
+      "bullets": [
+        "Built Selenium bots to auto-extract MOBI/Prospero dispatch logs, slashing night-report prep 40%.",
+        "Hardened API auth layer (JWT/Okta) protecting driver PII; zero breaches under continuous pen-tests.",
+        "Designed Apache Genie CLI for 3-min server spin-ups; 100% uptime for night-shift TMS nodes."
+      ]
+    },
+    {
+      "company": "Independent Contractor",
+      "location": "Sacramento, CA",
+      "role": "Last-Mile Dispatch Supervisor",
+      "dates": "Jan 2019 – Dec 2024",
+      "bullets": [
+        "Supervised 50+ driver nightly cohort for Instacart/AxleHire; leveraged real-time route solver to hold 4.9+ customer rating and 12% under labor budget.",
+        "Implemented safety stand-down protocol; cut reportable incidents 22% YoY."
+      ]
+    },
+    {
+      "company": "Golden Valley Trucking / Brokerage",
+      "location": "Turlock, CA",
+      "role": "Broker Operations Supervisor",
+      "dates": "Sep 2012 – Mar 2015",
+      "bullets": [
+        "Oversaw 500-carrier network and $12M P&L; automated load tracking via REST hooks, trimming invoice disputes 35%.",
+        "Enforced DOT carrier vetting and CDL compliance; maintained <1% audit findings."
+      ]
+    }
+  ],
+  "education": ["A.S. Computer Science (in progress) – Modesto Junior College", "DOT Certified Supervisor, HOS Rules & Log Auditing – NPTI"],
+  "certs": ["CDL-A License", "Forklift Instructor", "Python Automation – PCEP"]
+}

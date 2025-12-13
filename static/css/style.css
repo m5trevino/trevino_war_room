@@ -8,3 +8,5 @@ body { margin:0; font-family: monospace; background:#000; color:#0f0; display:fl
 .required { border-left:4px solid #0ff; }
 #details h2 { color:#0ff; }
 #details h3 { margin-top:20px; }
+.c-btn { cursor:pointer; font-weight:bold; padding:2px 5px; border:1px solid; border-radius:3px; font-size:11px; }
+.c-btn:hover { background:#333; }
