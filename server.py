@@ -11,6 +11,7 @@ from groq import Groq
 import httpx
 from dotenv import load_dotenv
 
+# --- ENGINE IMPORTS ---
 try:
     import migration_engine
     import pdf_engine
@@ -65,7 +66,7 @@ deck = KeyDeck()
 
 # --- DATABASE ---
 def get_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=30)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -81,13 +82,21 @@ def save_json(filename, data):
 
 def update_history(key, amount=1):
     if key in SESSION_STATS: SESSION_STATS[key] += amount
-    h = load_json(HISTORY_FILE, {"all_time":{}})
+    h = load_json(HISTORY_FILE, {"all_time":{}, "imported_files": []})
     if "all_time" not in h: h["all_time"] = {}
     if key not in h["all_time"]: h["all_time"][key] = 0
     h["all_time"][key] += amount
     save_json(HISTORY_FILE, h)
 
+def track_imported_file(filename):
+    h = load_json(HISTORY_FILE, {"all_time":{}, "imported_files": []})
+    if "imported_files" not in h: h["imported_files"] = []
+    if filename not in h["imported_files"]:
+        h["imported_files"].append(filename)
+        save_json(HISTORY_FILE, h)
+
 def sanitize_filename(text):
+    if not text: return "Unknown"
     return "".join(c for c in text if c.isalnum() or c in " -_").strip()[:50]
 
 def get_target_dir(job_id, title, company):
@@ -113,23 +122,31 @@ def status():
 @app.route('/api/jobs')
 def jobs():
     status_filter = request.args.get('status', 'NEW')
+    limit = int(request.args.get('limit', 50))
+    offset = int(request.args.get('offset', 0))
+    
     conn = get_db()
-    query = "SELECT id, title, company, city, pay_fmt, date_posted, score, status, raw_json FROM jobs WHERE 1=1"
     
-    if status_filter == 'NEW': query += " AND (status IS NULL OR status = 'NEW')"
-    elif status_filter in ['APPROVED', 'REFINERY', 'FACTORY']: query += " AND status = 'APPROVED'"
-    elif status_filter == 'DENIED': query += " AND (status = 'DENIED' OR status = 'AUTO_DENIED')"
-    elif status_filter == 'DELIVERED': query += " AND status = 'DELIVERED'"
-    
-    query += " ORDER BY score DESC, date_posted ASC"
+    # Construct Clauses
+    where_clause = "WHERE 1=1"
+    if status_filter == 'NEW': where_clause += " AND (status IS NULL OR status = 'NEW')"
+    elif status_filter in ['APPROVED', 'REFINERY', 'FACTORY']: where_clause += " AND status = 'APPROVED'"
+    elif status_filter == 'DENIED': where_clause += " AND (status = 'DENIED' OR status = 'AUTO_DENIED')"
+    elif status_filter == 'DELIVERED': where_clause += " AND status = 'DELIVERED'"
+
+    # 1. Get Total Count for this filter
+    count_query = f"SELECT COUNT(*) FROM jobs {where_clause}"
+    total_count = conn.execute(count_query).fetchone()[0]
+
+    # 2. Get Data Page
+    data_query = f"SELECT id, title, company, city, pay_fmt, date_posted, score, status, raw_json FROM jobs {where_clause} ORDER BY score DESC, date_posted ASC LIMIT {limit} OFFSET {offset}"
     
     try:
-        rows = conn.execute(query).fetchall()
+        rows = conn.execute(data_query).fetchall()
         out = []
         for r in rows:
             t_dir = get_target_dir(r['id'], r['title'], r['company'])
             
-            # RESOLVE PDF PATH
             safe_title = sanitize_filename(r['title'])
             safe_company = sanitize_filename(r['company'])
             dir_name = f"{safe_title}_{safe_company}_{r['id']}"
@@ -140,9 +157,7 @@ def jobs():
             
             if status_filter == 'DELIVERED' and not (has_ai or has_pdf): continue
             
-            # ROBUST URL EXTRACTION
             raw_data = json.loads(r['raw_json'])
-            # Try 'url', then 'link', then 'jobUrl', else '#'
             job_url = raw_data.get('url') or raw_data.get('link') or raw_data.get('jobUrl') or '#'
 
             out.append({
@@ -154,8 +169,17 @@ def jobs():
                 "job_url": job_url,
                 "safe_title": safe_title
             })
-        return jsonify(out)
-    except Exception as e: return jsonify([])
+        
+        # Return Object with Metadata
+        return jsonify({
+            "jobs": out,
+            "total": total_count,
+            "limit": limit,
+            "offset": offset
+        })
+    except Exception as e:
+        print(e)
+        return jsonify({"jobs": [], "total": 0})
     finally: conn.close()
 
 @app.route('/api/get_job_details')
@@ -168,7 +192,6 @@ def job_details():
     
     data = json.loads(row['raw_json'])
     desc = data.get('description', {}).get('html') or data.get('description', {}).get('text') or "No Desc"
-    # Same extraction logic here
     url = data.get('url') or data.get('link') or data.get('jobUrl') or '#'
     
     tags_db = load_json(TAGS_FILE, {"qualifications": [], "skills": [], "benefits": [], "ignored": []})
@@ -205,6 +228,113 @@ def open_folder():
         subprocess.Popen(['xdg-open', t_dir]) 
         return jsonify({"status": "opened"})
     return jsonify({"status": "error"})
+
+@app.route('/api/sweep_new', methods=['POST'])
+def sweep_new():
+    conn = get_db()
+    conn.execute("DELETE FROM jobs WHERE status='NEW' OR status IS NULL")
+    conn.commit()
+    conn.close()
+    return jsonify({"status":"obliterated"})
+
+# --- INTELLIGENT IMPORT SYSTEM ---
+@app.route('/api/scrapes', methods=['GET'])
+def list_scrapes():
+    all_files = glob.glob("*.json")
+    exclude_files = [HISTORY_FILE, TAGS_FILE, BLACKLIST_FILE, "package.json", "tsconfig.json"]
+    valid_list = []
+    
+    h = load_json(HISTORY_FILE, {"imported_files": []})
+    imported_files = h.get("imported_files", [])
+
+    for f in all_files:
+        if f in exclude_files: continue
+        if "input_json" in f: continue 
+        
+        try:
+            with open(f, 'r', encoding='utf-8') as jf:
+                data = json.load(jf)
+                jobs = []
+                if isinstance(data, list): jobs = data
+                elif isinstance(data, dict):
+                    if 'jobs' in data: jobs = data['jobs']
+                    elif 'results' in data: jobs = data['results']
+                
+                if len(jobs) == 0: continue
+                
+                first_job = jobs[0]
+                title = first_job.get('title', 'Unknown_Title')
+                employer_raw = first_job.get('employer', {})
+                company = "Unknown_Corp"
+                if isinstance(employer_raw, dict):
+                    company = employer_raw.get('name', 'Unknown_Corp')
+                elif isinstance(employer_raw, str):
+                    company = employer_raw
+                
+                safe_t = sanitize_filename(title)
+                safe_c = sanitize_filename(company)
+                suggested = f"{safe_t}_{safe_c}.json"
+                
+                size_kb = os.path.getsize(f) / 1024
+                mtime = os.path.getmtime(f)
+                date_str = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+                
+                valid_list.append({
+                    "filename": f,
+                    "suggested": suggested,
+                    "count": len(jobs),
+                    "size": f"{size_kb:.1f}KB",
+                    "date": date_str,
+                    "imported": f in imported_files
+                })
+        except Exception as e:
+            continue 
+
+    valid_list.sort(key=lambda x: x['date'], reverse=True)
+    return jsonify(valid_list)
+
+@app.route('/api/rename_file', methods=['POST'])
+def rename_file():
+    old_name = request.json.get('old_name')
+    new_name = request.json.get('new_name')
+    
+    if not old_name or not new_name: return jsonify({"error": "Missing names"})
+    if not os.path.exists(old_name): return jsonify({"error": "File not found"})
+    if not new_name.endswith('.json'): new_name += '.json'
+    
+    try:
+        os.rename(old_name, new_name)
+        return jsonify({"status": "renamed", "new_name": new_name})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/api/migrate', methods=['POST'])
+def run_migration():
+    files = request.json.get('files', [])
+    try:
+        stats = migration_engine.process_files(files)
+        SESSION_STATS['scraped'] += stats["new"]
+        update_history('scraped', stats["new"])
+        for f in files: track_imported_file(f)
+        return jsonify({"status": "success", "stats": stats})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/generate_pdf', methods=['POST'])
+def trigger_pdf():
+    try:
+        if not request.json or 'id' not in request.json:
+            return jsonify({"status": "error", "message": "Invalid Payload"})
+        
+        job_id = request.json['id']
+        result = pdf_engine.generate_pdf(job_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"[!] UNHANDLED SERVER CRASH IN PDF ROUTE: {e}")
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": f"SERVER CRASH: {str(e)}"})
 
 def execute_strike(job_id, model, temp, session_id):
     conn = get_db()
@@ -278,14 +408,12 @@ Skills: {skills}
 
 EXECUTE.
 """
-    
     key_name, key_val = deck.draw()
     if not key_val: return {"error": "No Keys Available"}
     
     use_proxy = False
     proxy_ip = "DIRECT"
     http_client = None
-    
     if PROXY_URL and random.random() > PROXY_BYPASS_CHANCE:
         use_proxy = True
         try:
@@ -333,24 +461,18 @@ TIME:  {duration:.2f}s
         if not is_gauntlet:
             json_path = os.path.join(t_dir, "resume.json")
             with open(json_path, 'w') as f: f.write(result)
-            
-            # AUTO PDF
-            print(f"[*] AUTO-ENGAGING PDF ENGINE FOR {job_id}...")
             try:
                 pdf_res = pdf_engine.generate_pdf(job_id)
                 if pdf_res.get('status') == 'success':
                     pdf_path_out = pdf_res.get('path')
-            except Exception as e:
-                print(f"[!] AUTO-PDF FAIL: {e}")
+            except: pass
 
-            if not is_batch:
-                trigger_editor(json_path)
+            if not is_batch: trigger_editor(json_path)
 
             conn = get_db()
             conn.execute("UPDATE jobs SET status='DELIVERED' WHERE id=?", (job_id,))
             conn.commit()
             conn.close()
-            
         else:
             gauntlet_json = os.path.join(campaign_dir, f"{sanitize_filename(row['title'])}_{safe_model}.json")
             with open(gauntlet_json, 'w') as f: f.write(result)
@@ -358,23 +480,14 @@ TIME:  {duration:.2f}s
         update_history('sent_to_groq')
         
         return {
-            "status": "success", 
-            "model": model,
-            "key": key_name,
-            "ip": proxy_ip,
-            "prompt": prompt,
-            "response": result,
-            "duration": duration,
-            "file": filepath,
-            "pdf_url": pdf_path_out
+            "status": "success", "model": model, "key": key_name, "ip": proxy_ip,
+            "prompt": prompt, "response": result, "duration": duration,
+            "file": filepath, "pdf_url": pdf_path_out
         }
-        
     except Exception as e:
         duration = (datetime.now() - start_time).total_seconds()
-        error_msg = str(e)
-        log_content = f"CRITICAL FAILURE\nMODEL: {model}\nERROR: {error_msg}\n{traceback.format_exc()}"
-        with open(filepath, 'w') as f: f.write(log_content)
-        return {"status": "failed", "model": model, "error": error_msg}
+        with open(filepath, 'w') as f: f.write(f"CRITICAL FAILURE\nERROR: {str(e)}")
+        return {"status": "failed", "model": model, "error": str(e)}
 
 @app.route('/api/strike', methods=['POST'])
 def api_strike():
@@ -451,40 +564,6 @@ def get_artifact():
         with open(json_path, 'r') as f: return jsonify({"content": f.read()})
     return jsonify({"content": "No Artifact"})
 
-@app.route('/api/scrapes', methods=['GET'])
-def list_scrapes():
-    all_files = glob.glob("*.json")
-    exclude = [HISTORY_FILE, TAGS_FILE, BLACKLIST_FILE, "package.json", "tsconfig.json"]
-    valid = [f for f in all_files if f not in exclude and "input_json" not in f]
-    return jsonify(valid)
-
-@app.route('/api/migrate', methods=['POST'])
-def run_migration():
-    files = request.json.get('files', [])
-    try:
-        stats = migration_engine.process_files(files)
-        SESSION_STATS['scraped'] += stats["new"]
-        update_history('scraped', stats["new"])
-        return jsonify({"status": "success", "stats": stats})
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/generate_pdf', methods=['POST'])
-def trigger_pdf():
-    try:
-        if not request.json or 'id' not in request.json:
-            return jsonify({"status": "error", "message": "Invalid Payload"})
-        
-        job_id = request.json['id']
-        result = pdf_engine.generate_pdf(job_id)
-        return jsonify(result)
-        
-    except Exception as e:
-        print(f"[!] UNHANDLED SERVER CRASH IN PDF ROUTE: {e}")
-        traceback.print_exc()
-        return jsonify({"status": "error", "message": f"SERVER CRASH: {str(e)}"})
-
 @app.route('/')
 def index(): return send_from_directory('templates', 'index.html')
 @app.route('/static/<path:path>')
@@ -493,5 +572,5 @@ def send_static(path): return send_from_directory('static', path)
 def send_done(filename): return send_from_directory('targets', filename) 
 
 if __name__ == "__main__":
-    print(f"\n--- WAR ROOM ONLINE (v5.6 LINKED IN) ---")
+    print(f"\n--- WAR ROOM ONLINE (v6.4 PAGINATION FIXED) ---")
     app.run(port=5000, debug=False)

@@ -23,29 +23,42 @@
         #list-container { flex-grow:1; overflow-y:auto; }
         
         #detail-pane { width:40%; background:var(--panel); display:flex; flex-direction:column; height: 100vh; }
+        
+        #global-job-header {
+            padding: 15px;
+            background: #000;
+            border-bottom: 2px solid var(--blue);
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #g-job-title { font-size: 14px; font-weight: bold; color: #fff; }
+        #g-job-corp { font-size: 12px; color: var(--gold); }
+        .btn-big-link {
+            background: var(--blue); color: #fff; text-align: center;
+            padding: 8px; font-weight: bold; cursor: pointer; border: none;
+            width: 100%; display: block; text-decoration: none;
+        }
+        .btn-big-link:hover { background: #1976d2; }
+
         #standard-view, #refinery-view, #factory-view, #product-view { display:none; flex-direction:column; flex: 1; overflow: hidden; min-height: 0; }
         
-        /* STANDARD VIEW */
         #std-skills-box { height:30%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
         #std-desc-box { height:70%; padding:20px; overflow-y:auto; color:#ccc; line-height:1.5; font-size:14px; }
 
-        /* REFINERY VIEW */
         #unsorted-box { height:40%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
         #arsenal-box { height:60%; display:flex; flex-direction:column; }
         .arsenal-cols { display:flex; height:100%; }
         .arsenal-col { flex:1; border-right:1px solid #333; padding:10px; overflow-y:auto; }
         .col-header { color:#666; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; text-align:center; }
 
-        /* FACTORY VIEW */
         #factory-controls { padding:15px; background:#0d1117; border-bottom:1px solid var(--border); }
         .control-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; }
         select { background:#000; color:#fff; border:1px solid #444; padding:5px; flex:1; }
         input[type=range] { flex:1; }
-        .btn-link { background:var(--blue); color:#fff; border:none; padding:5px 10px; font-size:10px; cursor:pointer; }
         #factory-terminal { flex:1; background:#000; color:var(--green); padding:15px; font-family:'Courier New'; font-size:11px; overflow-y:auto; white-space:pre-wrap; border-bottom:1px solid #333; }
         #factory-intel { height:25%; padding:15px; overflow-y:auto; background:#161b22; color:#888; font-size:12px; border-top:1px solid #333; }
         
-        /* PRODUCT VIEW */
         #product-header { padding:10px; background:#0d1117; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items: center; gap: 5px; }
         #resume-content { flex:1; overflow-y:auto; padding:15px; font-size:12px; color:#ccc; font-family:'Courier New'; white-space:pre-wrap; background:#000; border:none; resize:none; }
         
@@ -71,29 +84,31 @@
         .btn-save { background:var(--blue); color:#fff; border:none; display:inline-block; }
         .btn-pdf-batch { border-color:#9c27b0; color:#9c27b0; } .btn-pdf-batch:hover { background:#9c27b0; color:#fff; }
         .btn-import { display:inline-block; font-size:11px; padding:4px 8px; border-color:#888; color:#888; } .btn-import:hover { border-color:#fff; color:#fff; }
+        .btn-sweep { display:inline-block; font-size:11px; padding:4px 8px; border-color:var(--red); color:var(--red); margin-right: 10px; } .btn-sweep:hover { background:var(--red); color:#000; }
+        .btn-loadmore { width: 100%; padding: 15px; background: #161b22; color: #888; border: 1px solid #333; cursor: pointer; margin-top: 10px; font-weight: bold; } .btn-loadmore:hover { color: #fff; background: #222; }
 
         #import-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; }
         .modal-content { background:#161b22; border:1px solid var(--green); padding:20px; width:400px; border-radius:8px; }
         .file-list { max-height:200px; overflow-y:auto; margin:15px 0; border:1px solid #333; padding:10px; }
         .file-item { display:flex; gap:10px; padding:5px; border-bottom:1px solid #222; font-size:12px; }
+        
+        .c-btn { cursor:pointer; font-weight:bold; padding:2px 5px; border:1px solid; border-radius:3px; font-size:11px; }
+        .c-btn:hover { background:#333; }
     </style>
 </head>
 <body>
     <div id="job-list-pane">
         <div id="header-stats">
-            <div class="stat-block">
-                <span style="color:var(--green)">SESSION:</span>
-                <span class="stat-item">IN:<span id="s_scraped" class="stat-val-s">0</span></span>
-                <span class="stat-item">OK:<span id="s_approved" class="stat-val-s">0</span></span>
-                <span class="stat-item">NO:<span id="s_denied" class="stat-val-s">0</span></span>
-            </div>
-            <div class="stat-block" style="border-left:1px solid #333; padding:10px; margin-left:10px;">
-                <span style="color:var(--blue)">TOTAL:</span>
+            <div class="stat-block" style="padding:10px;">
+                <span style="color:var(--blue)">ALL TIME:</span>
                 <span class="stat-item">IN:<span id="a_scraped" class="stat-val-a">0</span></span>
                 <span class="stat-item">OK:<span id="a_approved" class="stat-val-a">0</span></span>
                 <span class="stat-item">NO:<span id="a_denied" class="stat-val-a">0</span></span>
             </div>
-            <button class="btn-import" onclick="openImportModal()">+ IMPORT</button>
+            <div>
+                <button class="btn-sweep" onclick="purgeIncoming()">PURGE INCOMING</button>
+                <button class="btn-import" onclick="openImportModal()">+ IMPORT</button>
+            </div>
         </div>
         
         <div id="tabs">
@@ -105,9 +120,17 @@
         </div>
         <div class="grid-header" id="grid-header"></div>
         <div id="list-container"></div>
+        <button id="load-more-btn" class="btn-loadmore" onclick="loadMore()">LOAD NEXT BATCH</button>
     </div>
     
     <div id="detail-pane">
+        <--- GLOBAL HEADER FOR URL -->
+        <div id="global-job-header">
+            <div id="g-job-title"></div>
+            <div id="g-job-corp"></div>
+            <button class="btn-big-link" onclick="openJobLink()">OPEN TARGET URL ↗</button>
+        </div>
+
         <div id="standard-view">
             <div id="std-skills-box">
                 <div class="tag-section-title">DETECTED SIGNALS</div>
@@ -138,17 +161,7 @@
                         <option value="moonshotai/kimi-k2-instruct" selected>moonshotai/kimi-k2-instruct (MOONSHINE)</option>
                         <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
                         <option value="groq/compound">groq/compound</option>
-                        <option value="openai/gpt-oss-safeguard-20b">openai/gpt-oss-safeguard-20b</option>
-                        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
-                        <option value="moonshotai/kimi-k2-instruct-0905">moonshotai/kimi-k2-instruct-0905</option>
-                        <option value="qwen/qwen3-32b">qwen/qwen3-32b</option>
-                        <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
-                        <option value="allam-2-7b">allam-2-7b</option>
-                        <option value="meta-llama/llama-4-scout-17b-16e-instruct">llama-4-scout-17b</option>
-                        <option value="meta-llama/llama-4-maverick-17b-128e-instruct">llama-4-maverick-17b</option>
-                        <option value="groq/compound-mini">groq/compound-mini</option>
                     </select>
-                    <button class="btn-link" onclick="openJobLink()">LINK</button>
                 </div>
                 <div class="control-row">
                     <label style="font-size:10px; color:#888;">TEMP:</label>
@@ -158,7 +171,6 @@
             </div>
             <div id="factory-terminal">
                 > PARKER LEWIS PROTOCOL INITIALIZED.
-                > SELECT TARGET TO ENGAGE.
             </div>
             <div id="factory-intel">JOB INTELLIGENCE...</div>
         </div>
@@ -168,8 +180,8 @@
                 <select id="result-selector" onchange="loadArtifact(this.value)" style="flex:1; margin-right:5px;">
                     <option value="PRIMARY">PRIMARY (LATEST)</option>
                 </select>
-                <button class="btn-save" onclick="saveJSON()">SAVE EDITS</button>
-                <button class="btn-pdf" onclick="openPDF()">OPEN PDF</button>
+                <button class="btn-save" onclick="saveJSON()">SAVE</button>
+                <button class="btn-pdf" onclick="openPDF()">PDF</button>
             </div>
             <textarea id="resume-content"></textarea>
         </div>

@@ -1,8 +1,8 @@
 {
   "all_time": {
-    "scraped": 51,
-    "approved": 6,
-    "denied": 1,
+    "scraped": 1019,
+    "approved": 299,
+    "denied": 435,
     "sent_to_groq": 91
   }
 }

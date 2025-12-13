@@ -3,31 +3,66 @@ let focusMode = 'JOBS';
 let refineryTags = []; 
 let currentTagIndex = 0;
 let currentJobUrl = '';
+let currentOffset = 0;
+let totalJobs = 0;
 
 document.getElementById('temp-slider').addEventListener('input', (e) => {
     document.getElementById('temp-val').innerText = e.target.value;
 });
 
-async function loadJobs() {
+async function loadJobs(append=false) {
     let statusQuery = currentTab;
     if (currentTab === 'REFINERY' || currentTab === 'FACTORY') statusQuery = 'APPROVED';
     if (currentTab === 'DELIVERED') statusQuery = 'DELIVERED'; 
 
-    const res = await fetch(`/api/jobs?status=${statusQuery}`);
-    jobList = await res.json();
-    renderHeader();
-    renderList();
-    
-    if (currentJobId && jobList.find(j => j.id === currentJobId)) {
-        selectJob(currentJobId);
-    } else if (jobList.length > 0) {
-        selectJob(jobList[0].id);
-    } else {
-        if(document.getElementById('std-desc-box')) document.getElementById('std-desc-box').innerHTML = "<div style='padding:20px;text-align:center'>SECTOR CLEAR. NO TARGETS.</div>";
-        if(document.getElementById('std-tags')) document.getElementById('std-tags').innerHTML = "";
+    if(!append) {
+        currentOffset = 0;
+        jobList = [];
+        document.getElementById('list-container').innerHTML = "";
     }
+
+    const res = await fetch(`/api/jobs?status=${statusQuery}&limit=50&offset=${currentOffset}`);
+    const data = await res.json();
+    const newJobs = data.jobs || [];
+    totalJobs = data.total || 0;
+    
+    if(append) {
+        jobList = jobList.concat(newJobs);
+    } else {
+        jobList = newJobs;
+    }
+
+    renderHeader();
+    renderList(append);
+    
+    if (!append && jobList.length > 0) {
+        selectJob(jobList[0].id);
+    } else if (jobList.length === 0) {
+        document.getElementById('global-job-header').style.display = 'none';
+        if(document.getElementById('std-desc-box')) document.getElementById('std-desc-box').innerHTML = "<div style='padding:20px;text-align:center'>SECTOR CLEAR.</div>";
+    }
+    
     updateStats();
     updateControls();
+    
+    // PAGINATION LOGIC
+    const btn = document.getElementById('load-more-btn');
+    if (jobList.length < totalJobs) {
+        btn.style.display = 'block';
+        const remaining = totalJobs - jobList.length;
+        const nextPageSize = Math.min(50, remaining);
+        const currentPage = Math.floor(jobList.length / 50);
+        const totalPages = Math.ceil(totalJobs / 50);
+        
+        btn.innerText = `LOAD NEXT ${nextPageSize} (SHOWING ${jobList.length} OF ${totalJobs} | PAGE ${currentPage} OF ${totalPages})`;
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function loadMore() {
+    currentOffset += 50;
+    loadJobs(true);
 }
 
 function renderHeader() {
@@ -39,14 +74,14 @@ function renderHeader() {
         h.style.gridTemplateColumns = "1fr 1fr 80px 80px 80px";
         h.innerHTML = `<div>TITLE</div><div>CORP</div><div>PAY</div><div>LOC</div><div>TYPE</div>`;
     } else {
-        h.style.gridTemplateColumns = "30px 1fr 1fr 1fr 140px"; // Control Cluster
+        h.style.gridTemplateColumns = "30px 1fr 1fr 1fr 140px"; 
         h.innerHTML = `<div><input type="checkbox" onclick="toggleAll(this)"></div><div>TITLE</div><div>CORP</div><div>CITY</div><div>CONTROLS</div>`;
     }
 }
 
-function renderList() {
+function renderList(append) {
     const c = document.getElementById('list-container');
-    c.innerHTML = jobList.map(j => {
+    const html = jobList.map(j => {
         let cols = '';
         if (currentTab === 'NEW') {
             cols = `
@@ -68,13 +103,10 @@ function renderList() {
             `;
             return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 1fr 1fr 80px 80px 80px;" onclick="selectJob('${j.id}')">${cols}</div>`;
         } else {
-            // THE DEPLOYMENT CLUSTER
             const btnPDF = j.has_pdf 
                 ? `<span class="c-btn" style="border-color:#00e676; color:#00e676;" onclick="window.open('${j.pdf_link}', '_blank'); event.stopPropagation();">PDF</span>` 
                 : `<span class="c-btn" style="border-color:#333; color:#333;">...</span>`;
-            
             const btnDir = `<span class="c-btn" style="border-color:#ffd700; color:#ffd700;" onclick="openFolder('${j.id}'); event.stopPropagation();">DIR</span>`;
-            
             const btnJob = `<span class="c-btn" style="border-color:#2196f3; color:#2196f3;" onclick="window.open('${j.job_url}', '_blank'); event.stopPropagation();">JOB</span>`;
 
             cols = `
@@ -87,6 +119,43 @@ function renderList() {
             return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 30px 1fr 1fr 1fr 140px;" onclick="selectJob('${j.id}')">${cols}</div>`;
         }
     }).join('');
+    
+    c.innerHTML = html;
+}
+
+async function action(act) {
+    if(!currentJobId) return;
+    
+    if (act === 'process') {
+        batchExecute(true); 
+        return;
+    }
+
+    const targetId = currentJobId; 
+    const endpoint = {'approve':'/api/approve', 'deny':'/api/deny', 'restore':'/api/restore'}[act];
+    
+    const row = document.getElementById('row-'+targetId);
+    if(row) row.remove();
+    
+    const idx = jobList.findIndex(j=>j.id===targetId);
+    if(idx > -1) {
+        jobList.splice(idx, 1);
+        if(jobList[idx]) selectJob(jobList[idx].id);
+        else if(jobList[idx-1]) selectJob(jobList[idx-1].id);
+        else {
+            document.getElementById('global-job-header').style.display = 'none';
+        }
+    }
+
+    fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:targetId})});
+    
+    updateStats(); 
+}
+
+async function purgeIncoming() {
+    if(!confirm("HARD DELETE ALL 'NEW' JOBS? THIS IS PERMANENT.")) return;
+    await fetch('/api/sweep_new', {method:'POST'});
+    loadJobs(); 
 }
 
 async function openFolder(id) {
@@ -116,6 +185,59 @@ function switchTab(tab) {
     loadJobs();
 }
 
+async function openImportModal() {
+    document.getElementById('import-modal').style.display='flex';
+    const files = await fetch('/api/scrapes').then(r=>r.json());
+    
+    document.getElementById('modal-file-list').innerHTML = files.map(f => {
+        const badge = f.imported ? `<span style="color:#00e676; margin-left:10px; font-size:10px;">[IMPORTED]</span>` : "";
+        const count = `<span style="color:#888; font-size:10px; margin-left:5px;">(${f.count} jobs | ${f.size} | ${f.date})</span>`;
+        
+        return `
+        <div class="file-item" style="flex-direction:column; align-items:flex-start; border-bottom:1px solid #333; padding:10px;">
+            <div style="display:flex; align-items:center; width:100%; margin-bottom:5px;">
+                <input type="checkbox" value="${f.filename}" style="margin-right:10px;">
+                <span style="color:#fff;">${f.filename}</span>
+                ${count} ${badge}
+            </div>
+            <div style="display:flex; width:100%; gap:5px;">
+                <input type="text" id="rename-${f.filename}" value="${f.suggested}" style="background:#000; color:#00e676; border:1px solid #333; padding:5px; flex:1; font-family:monospace;">
+                <button onclick="applyRename('${f.filename}')" style="background:#2196f3; color:white; border:none; padding:5px 10px; cursor:pointer; font-size:10px;">SAVE NAME</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function applyRename(oldName) {
+    const input = document.getElementById(`rename-${oldName}`);
+    const newName = input.value;
+    const res = await fetch('/api/rename_file', {
+        method:'POST', 
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({old_name: oldName, new_name: newName})
+    });
+    const data = await res.json();
+    if(data.status === 'renamed') {
+        openImportModal(); 
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+
+async function executeMigration() {
+    const checkboxes = document.querySelectorAll('#modal-file-list input:checked');
+    const files = Array.from(checkboxes).map(c => c.value);
+    if(files.length===0) return;
+    document.querySelector('#import-modal button:last-child').innerText = "MIGRATING...";
+    try {
+        const res = await fetch('/api/migrate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:files})});
+        const data = await res.json();
+        alert(`REPORT: ${data.stats.new} New Jobs Added.`);
+        switchTab('NEW');
+    } catch(e) { alert("Migration Error."); }
+    document.getElementById('import-modal').style.display='none';
+}
+
 function updateControls() {
     document.querySelectorAll('#controls button').forEach(b => b.style.display = 'none');
     
@@ -143,6 +265,15 @@ async function selectJob(id) {
     document.querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));
     if(document.getElementById('row-'+id)) document.getElementById('row-'+id).classList.add('active');
     
+    const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
+    currentJobUrl = d.url; 
+    const jobObj = jobList.find(j => j.id === id);
+
+    const gh = document.getElementById('global-job-header');
+    gh.style.display = 'flex';
+    document.getElementById('g-job-title').innerText = jobObj ? jobObj.title : "UNKNOWN TARGET";
+    document.getElementById('g-job-corp').innerText = jobObj ? jobObj.company : "";
+
     if (currentTab === 'DELIVERED') {
         const variants = await fetch(`/api/get_gauntlet_files?id=${id}`).then(r=>r.json());
         const sel = document.getElementById('result-selector');
@@ -151,12 +282,6 @@ async function selectJob(id) {
             sel.innerHTML += `<option value="${v}">${v}</option>`;
         });
         
-        // --- ADD "GO TO TARGET" BUTTON TO DETAIL HEADER ---
-        // We first fetch details to get the URL
-        const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
-        currentJobUrl = d.url;
-
-        // Inject button if not present (or just overwrite header)
         const header = document.getElementById('product-header');
         header.innerHTML = `
             <select id="result-selector" onchange="loadArtifact(this.value)" style="flex:1; margin-right:5px;">
@@ -171,9 +296,6 @@ async function selectJob(id) {
         return;
     }
 
-    const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
-    currentJobUrl = d.url; 
-    
     if (currentTab === 'NEW' || currentTab === 'DENIED') {
         document.getElementById('std-desc-box').innerHTML = d.description;
         const allTags = d.skills.map(s => 
@@ -280,27 +402,6 @@ function log(msg) {
     }
 }
 
-async function action(act) {
-    if(!currentJobId) return;
-    
-    if (act === 'process') {
-        batchExecute(true); 
-        return;
-    }
-
-    const endpoint = {'approve':'/api/approve', 'deny':'/api/deny', 'restore':'/api/restore'}[act];
-    await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentJobId})});
-    
-    const idx = jobList.findIndex(j=>j.id===currentJobId);
-    if(idx > -1) {
-        jobList.splice(idx, 1);
-        document.getElementById('row-'+currentJobId).remove();
-        if(jobList[idx]) selectJob(jobList[idx].id);
-        else if(jobList[idx-1]) selectJob(jobList[idx-1].id);
-    }
-    updateStats();
-}
-
 async function batchExecute(singleMode=false) {
     let targets = [];
     
@@ -343,7 +444,7 @@ async function batchExecute(singleMode=false) {
                 
                 let linkHtml = "";
                 if(data.pdf_url) {
-                    linkHtml = `<button style="background:#00e676; color:#000; border:none; padding:5px 10px; font-weight:bold; cursor:pointer; margin-top:5px;" onclick="window.open('${data.pdf_url}', '_blank')">OPEN PDF ASSET</button>`;
+                    linkHtml = `<button style="background:#00e676; color:#00e676; border:none; padding:5px 10px; font-weight:bold; cursor:pointer; margin-top:5px;" onclick="window.open('${data.pdf_url}', '_blank')">OPEN PDF ASSET</button>`;
                 }
 
                 const html = `
@@ -365,10 +466,7 @@ async function batchExecute(singleMode=false) {
         } catch(e) {
             log(`<div style="color:red;">!!! NETWORK ERROR: ${e}</div>`);
         }
-        
-        if(targets.length > 1) await new Promise(r => setTimeout(r, 2000));
     }
-    
     log("<div style='color:#00e676; margin-top:20px; border-top:2px solid #00e676;'> > EXECUTION COMPLETE.</div>");
     loadJobs();
 }
@@ -473,9 +571,7 @@ async function blacklistEmployer() {
 
 async function updateStats() {
     const s = await fetch('/api/status').then(r=>r.json());
-    document.getElementById('s_scraped').textContent = s.session.scraped||0;
-    document.getElementById('s_approved').textContent = s.session.approved||0;
-    document.getElementById('s_denied').textContent = s.session.denied||0;
+    // Only update ALL TIME and session GROQ
     document.getElementById('a_scraped').textContent = s.all_time.scraped||0;
     document.getElementById('a_approved').textContent = s.all_time.approved||0;
     document.getElementById('a_denied').textContent = s.all_time.denied||0;
@@ -510,25 +606,6 @@ async function openPDF() {
         btn.style.color = "";
         loadJobs(); 
     }
-}
-
-async function openImportModal() {
-    document.getElementById('import-modal').style.display='flex';
-    const files = await fetch('/api/scrapes').then(r=>r.json());
-    document.getElementById('modal-file-list').innerHTML = files.map(f => `<div class="file-item"><input type="checkbox" value="${f}"> ${f}</div>`).join('');
-}
-async function executeMigration() {
-    const checkboxes = document.querySelectorAll('#modal-file-list input:checked');
-    const files = Array.from(checkboxes).map(c => c.value);
-    if(files.length===0) return;
-    document.querySelector('#import-modal button:last-child').innerText = "MIGRATING...";
-    try {
-        const res = await fetch('/api/migrate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:files})});
-        const data = await res.json();
-        alert(`REPORT: ${data.stats.new} New Jobs Added.`);
-        switchTab('NEW');
-    } catch(e) { alert("Migration Error."); }
-    document.getElementById('import-modal').style.display='none';
 }
 
 document.addEventListener('keydown', e => {

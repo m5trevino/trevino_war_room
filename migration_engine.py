@@ -38,7 +38,7 @@ def normalize_pay(job):
 def process_files(file_list):
     print(f"--- STARTING MIGRATION ON {len(file_list)} FILES ---")
     
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=30)
     c = conn.cursor()
     
     # Ensure table exists
@@ -61,8 +61,11 @@ def process_files(file_list):
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 content = json.load(f)
-                # Handle both raw list and {jobs: []} format
-                jobs = content if isinstance(content, list) else content.get('jobs', [])
+                jobs = []
+                if isinstance(content, list): jobs = content
+                elif isinstance(content, dict):
+                    if 'jobs' in content: jobs = content['jobs']
+                    elif 'results' in content: jobs = content['results']
         except Exception as e:
             print(f"Error reading {filename}: {e}")
             continue
@@ -81,11 +84,19 @@ def process_files(file_list):
                 stats["skipped"] += 1
                 continue
 
-            # Check Blacklist
+            # Check Blacklist (SAFE EMPLOYER HANDLING)
             title = safe_str(job.get('title')).lower()
-            employer = job.get('employer', {}).get('name', '').lower()
-            status = "NEW"
             
+            # Safe access for nested dictionary that might be None
+            emp_data = job.get('employer') or {}
+            if isinstance(emp_data, dict):
+                employer = emp_data.get('name', '')
+            else:
+                employer = str(emp_data)
+                
+            employer = safe_str(employer).lower()
+            
+            status = "NEW"
             for term in blacklist:
                 if term in title or term in employer:
                     status = "AUTO_DENIED"
@@ -100,7 +111,7 @@ def process_files(file_list):
             c.execute("INSERT INTO jobs VALUES (?,?,?,?,?,?,?,?,?,?,?)", (
                 jid,
                 job.get('title', 'Unknown'),
-                job.get('employer', {}).get('name', 'Unknown'),
+                employer.title(), # Store title cased
                 safe_str(loc.get('city')),
                 safe_str(loc.get('admin1Code')),
                 freshness,
