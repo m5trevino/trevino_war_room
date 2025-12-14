@@ -29,14 +29,14 @@
         #std-skills-box { height:30%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
         #std-desc-box { height:70%; padding:20px; overflow-y:auto; color:#ccc; line-height:1.5; font-size:14px; }
 
-        /* REFINERY VIEW */
+        /* TAGGING VIEW */
         #unsorted-box { height:40%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
         #arsenal-box { height:60%; display:flex; flex-direction:column; }
         .arsenal-cols { display:flex; height:100%; }
         .arsenal-col { flex:1; border-right:1px solid #333; padding:10px; overflow-y:auto; }
         .col-header { color:#666; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; text-align:center; }
 
-        /* FACTORY VIEW */
+        /* GENERATION VIEW */
         #factory-controls { padding:15px; background:#0d1117; border-bottom:1px solid var(--border); }
         .control-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; }
         select { background:#000; color:#fff; border:1px solid #444; padding:5px; flex:1; }
@@ -97,11 +97,11 @@
         </div>
         
         <div id="tabs">
-            <div class="tab active" onclick="switchTab('NEW')">INCOMING</div>
-            <div class="tab" onclick="switchTab('REFINERY')">REFINERY</div>
-            <div class="tab" onclick="switchTab('FACTORY')">FACTORY</div>
-            <div class="tab" onclick="switchTab('DELIVERED')">ARMORY</div>
-            <div class="tab" onclick="switchTab('DENIED')">GRAVEYARD</div>
+            <div class="tab active" onclick="switchTab('NEW')">PENDING</div>
+            <div class="tab" onclick="switchTab('TAGGING')">TAGGING</div>
+            <div class="tab" onclick="switchTab('GENERATION')">GENERATION</div>
+            <div class="tab" onclick="switchTab('DELIVERED')">COMPLETED</div>
+            <div class="tab" onclick="switchTab('DENIED')">DENIED</div>
         </div>
         <div class="grid-header" id="grid-header"></div>
         <div id="list-container"></div>

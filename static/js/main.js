@@ -1,4 +1,4 @@
-let jobList = [], currentJobId = null, currentTab = 'NEW';
+let jobList = [], currentJobId = null, currentTab = 'PENDING';
 let focusMode = 'JOBS'; 
 let refineryTags = []; 
 let currentTagIndex = 0;
@@ -8,11 +8,17 @@ document.getElementById('temp-slider').addEventListener('input', (e) => {
     document.getElementById('temp-val').innerText = e.target.value;
 });
 
-async function loadJobs() {
-    let statusQuery = currentTab;
-    if (currentTab === 'REFINERY' || currentTab === 'FACTORY') statusQuery = 'APPROVED';
-    if (currentTab === 'DELIVERED') statusQuery = 'DELIVERED'; 
+// --- TRANSLATION LAYER (UI -> SERVER) ---
+function getStatusParam(tab) {
+    if (tab === 'PENDING') return 'NEW';
+    if (tab === 'TAGGING' || tab === 'GENERATION') return 'APPROVED';
+    if (tab === 'COMPLETED') return 'DELIVERED';
+    if (tab === 'DENIED') return 'DENIED';
+    return 'NEW';
+}
 
+async function loadJobs() {
+    let statusQuery = getStatusParam(currentTab);
     const res = await fetch(`/api/jobs?status=${statusQuery}`);
     jobList = await res.json();
     renderHeader();
@@ -23,7 +29,7 @@ async function loadJobs() {
     } else if (jobList.length > 0) {
         selectJob(jobList[0].id);
     } else {
-        if(document.getElementById('std-desc-box')) document.getElementById('std-desc-box').innerHTML = "<div style='padding:20px;text-align:center'>SECTOR CLEAR. NO TARGETS.</div>";
+        if(document.getElementById('std-desc-box')) document.getElementById('std-desc-box').innerHTML = "<div style='padding:20px;text-align:center;color:#666'>SECTOR CLEAR. NO TARGETS.</div>";
         if(document.getElementById('std-tags')) document.getElementById('std-tags').innerHTML = "";
     }
     updateStats();
@@ -32,14 +38,14 @@ async function loadJobs() {
 
 function renderHeader() {
     const h = document.getElementById('grid-header');
-    if (currentTab === 'NEW') {
+    if (currentTab === 'PENDING') {
         h.style.gridTemplateColumns = "50px 70px 80px 1fr 1fr";
         h.innerHTML = `<div>SCR</div><div>PAY</div><div>LOC</div><div>ROLE</div><div>CORP</div>`;
     } else if (currentTab === 'DENIED') {
         h.style.gridTemplateColumns = "1fr 1fr 80px 80px 80px";
         h.innerHTML = `<div>TITLE</div><div>CORP</div><div>PAY</div><div>LOC</div><div>TYPE</div>`;
     } else {
-        h.style.gridTemplateColumns = "30px 1fr 1fr 1fr 140px"; // Control Cluster
+        h.style.gridTemplateColumns = "30px 1fr 1fr 1fr 140px"; 
         h.innerHTML = `<div><input type="checkbox" onclick="toggleAll(this)"></div><div>TITLE</div><div>CORP</div><div>CITY</div><div>CONTROLS</div>`;
     }
 }
@@ -48,7 +54,7 @@ function renderList() {
     const c = document.getElementById('list-container');
     c.innerHTML = jobList.map(j => {
         let cols = '';
-        if (currentTab === 'NEW') {
+        if (currentTab === 'PENDING') {
             cols = `
                 <div style="color:${j.score>=50?'#ffd700':'#666'}">${j.score}</div>
                 <div style="color:#00e676">${j.pay}</div>
@@ -68,13 +74,11 @@ function renderList() {
             `;
             return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 1fr 1fr 80px 80px 80px;" onclick="selectJob('${j.id}')">${cols}</div>`;
         } else {
-            // THE DEPLOYMENT CLUSTER
             const btnPDF = j.has_pdf 
                 ? `<span class="c-btn" style="border-color:#00e676; color:#00e676;" onclick="window.open('${j.pdf_link}', '_blank'); event.stopPropagation();">PDF</span>` 
                 : `<span class="c-btn" style="border-color:#333; color:#333;">...</span>`;
             
             const btnDir = `<span class="c-btn" style="border-color:#ffd700; color:#ffd700;" onclick="openFolder('${j.id}'); event.stopPropagation();">DIR</span>`;
-            
             const btnJob = `<span class="c-btn" style="border-color:#2196f3; color:#2196f3;" onclick="window.open('${j.job_url}', '_blank'); event.stopPropagation();">JOB</span>`;
 
             cols = `
@@ -100,18 +104,22 @@ function switchTab(tab) {
     updateRefineryFocus();
     
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const tabs = Array.from(document.querySelectorAll('.tab'));
-    const map = {'NEW':0, 'REFINERY':1, 'FACTORY':2, 'DELIVERED':3, 'DENIED':4};
-    if (tabs[map[tab]]) tabs[map[tab]].classList.add('active');
+    // MAPPING TAB INDEX MANUALLY
+    const tabs = document.querySelectorAll('.tab');
+    if(tab === 'PENDING') tabs[0].classList.add('active');
+    if(tab === 'TAGGING') tabs[1].classList.add('active');
+    if(tab === 'GENERATION') tabs[2].classList.add('active');
+    if(tab === 'COMPLETED') tabs[3].classList.add('active');
+    if(tab === 'DENIED') tabs[4].classList.add('active');
     
     ['standard-view', 'refinery-view', 'factory-view', 'product-view'].forEach(id => {
         if(document.getElementById(id)) document.getElementById(id).style.display = 'none';
     });
 
-    if (tab === 'NEW' || tab === 'DENIED') document.getElementById('standard-view').style.display = 'flex';
-    if (tab === 'REFINERY') document.getElementById('refinery-view').style.display = 'flex';
-    if (tab === 'FACTORY') document.getElementById('factory-view').style.display = 'flex';
-    if (tab === 'DELIVERED') document.getElementById('product-view').style.display = 'flex';
+    if (tab === 'PENDING' || tab === 'DENIED') document.getElementById('standard-view').style.display = 'flex';
+    if (tab === 'TAGGING') document.getElementById('refinery-view').style.display = 'flex';
+    if (tab === 'GENERATION') document.getElementById('factory-view').style.display = 'flex';
+    if (tab === 'COMPLETED') document.getElementById('product-view').style.display = 'flex';
 
     loadJobs();
 }
@@ -119,16 +127,16 @@ function switchTab(tab) {
 function updateControls() {
     document.querySelectorAll('#controls button').forEach(b => b.style.display = 'none');
     
-    if (currentTab === 'NEW') {
+    if (currentTab === 'PENDING') {
         document.getElementById('btn-a').style.display = 'inline-block';
         document.getElementById('btn-d').style.display = 'inline-block';
     }
-    if (currentTab === 'FACTORY') {
+    if (currentTab === 'GENERATION') {
         document.getElementById('btn-p').style.display = 'inline-block';
         document.getElementById('btn-b').style.display = 'inline-block';
         document.getElementById('btn-g').style.display = 'inline-block';
     }
-    if (currentTab === 'DELIVERED') {
+    if (currentTab === 'COMPLETED') {
         document.getElementById('btn-pb').style.display = 'inline-block'; 
         document.getElementById('btn-d').style.display = 'inline-block'; 
     }
@@ -143,7 +151,7 @@ async function selectJob(id) {
     document.querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));
     if(document.getElementById('row-'+id)) document.getElementById('row-'+id).classList.add('active');
     
-    if (currentTab === 'DELIVERED') {
+    if (currentTab === 'COMPLETED') {
         const variants = await fetch(`/api/get_gauntlet_files?id=${id}`).then(r=>r.json());
         const sel = document.getElementById('result-selector');
         sel.innerHTML = `<option value="PRIMARY">PRIMARY (LATEST)</option>`;
@@ -151,22 +159,8 @@ async function selectJob(id) {
             sel.innerHTML += `<option value="${v}">${v}</option>`;
         });
         
-        // --- ADD "GO TO TARGET" BUTTON TO DETAIL HEADER ---
-        // We first fetch details to get the URL
         const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
         currentJobUrl = d.url;
-
-        // Inject button if not present (or just overwrite header)
-        const header = document.getElementById('product-header');
-        header.innerHTML = `
-            <select id="result-selector" onchange="loadArtifact(this.value)" style="flex:1; margin-right:5px;">
-                <option value="PRIMARY">PRIMARY (LATEST)</option>
-            </select>
-            <button class="btn-link" style="background:var(--blue); color:#fff; border:none; padding:5px 10px; cursor:pointer;" onclick="openJobLink()">GO TO TARGET</button>
-            <button class="btn-save" onclick="saveJSON()">SAVE</button>
-            <button class="btn-pdf" onclick="openPDF()">PDF</button>
-        `;
-
         await loadArtifact("PRIMARY");
         return;
     }
@@ -174,7 +168,7 @@ async function selectJob(id) {
     const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
     currentJobUrl = d.url; 
     
-    if (currentTab === 'NEW' || currentTab === 'DENIED') {
+    if (currentTab === 'PENDING' || currentTab === 'DENIED') {
         document.getElementById('std-desc-box').innerHTML = d.description;
         const allTags = d.skills.map(s => 
             `<span class="skill-tag ${s.category === 'new' ? 'new' : 'sorted'}">${s.name}</span>`
@@ -182,7 +176,7 @@ async function selectJob(id) {
         document.getElementById('std-tags').innerHTML = allTags;
     }
     
-    if (currentTab === 'REFINERY') {
+    if (currentTab === 'TAGGING') {
         renderRefinery(d.skills);
         if (focusMode === 'TAGS') {
             currentTagIndex = 0;
@@ -190,7 +184,7 @@ async function selectJob(id) {
         }
     }
     
-    if (currentTab === 'FACTORY') {
+    if (currentTab === 'GENERATION') {
         const allTags = d.skills.map(s => 
             `<span class="skill-tag ${s.category === 'new' ? 'new' : 'sorted'}">${s.name}</span>`
         ).join('');
@@ -236,7 +230,7 @@ function renderRefinery(skills) {
 }
 
 function updateRefineryFocus() {
-    if (currentTab !== 'REFINERY') return;
+    if (currentTab !== 'TAGGING') return;
     const box = document.getElementById('unsorted-box');
     if (focusMode === 'TAGS') {
         box.style.border = "2px solid #00e676"; 
@@ -349,7 +343,7 @@ async function batchExecute(singleMode=false) {
                 const html = `
                 <div style="margin-top:20px; border-top: 1px dashed #444; padding-top:10px;">
                     <div style="color:#2196f3; font-weight:bold;">
-                        TARGET: ${id} | MOVED TO ARMORY
+                        TARGET: ${id} | MOVED TO OUTPUT
                     </div>
                     <div style="color:#00e676; white-space:pre-wrap;">${data.response.substring(0, 100)}...</div>
                     ${linkHtml}
@@ -526,18 +520,19 @@ async function executeMigration() {
         const res = await fetch('/api/migrate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:files})});
         const data = await res.json();
         alert(`REPORT: ${data.stats.new} New Jobs Added.`);
-        switchTab('NEW');
+        switchTab('PENDING');
     } catch(e) { alert("Migration Error."); }
     document.getElementById('import-modal').style.display='none';
 }
 
+// KEYBOARD BINDINGS
 document.addEventListener('keydown', e => {
     if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if(document.getElementById('import-modal').style.display === 'flex') return;
 
     if (e.key === 'Tab') {
         e.preventDefault(); 
-        if (currentTab === 'REFINERY') {
+        if (currentTab === 'TAGGING') {
             focusMode = (focusMode === 'JOBS') ? 'TAGS' : 'JOBS';
             if (focusMode === 'TAGS' && refineryTags.length > 0) {
                  if (currentTagIndex >= refineryTags.length) currentTagIndex = 0;
@@ -578,19 +573,19 @@ document.addEventListener('keydown', e => {
     }
 
     if (focusMode === 'JOBS') {
-        if(currentTab === 'NEW') {
+        if(currentTab === 'PENDING') {
             if(e.key==='a'||e.key==='A') action('approve');
             if(e.key==='d'||e.key==='D') action('deny');
         }
         if(currentTab === 'DENIED') {
             if(e.key==='r'||e.key==='R') action('restore');
         }
-        if(currentTab === 'FACTORY') {
+        if(currentTab === 'GENERATION') {
             if(e.key==='p'||e.key==='P') action('process');
         }
     }
 
-    if (currentTab === 'REFINERY') {
+    if (currentTab === 'TAGGING') {
         if (focusMode === 'TAGS' && refineryTags.length > 0) {
             const tag = refineryTags[currentTagIndex].name;
             if(e.key==='q'||e.key==='Q') harvestTag(tag, 'qualifications');
@@ -600,4 +595,4 @@ document.addEventListener('keydown', e => {
     }
 });
 
-switchTab('NEW');
+switchTab('PENDING');

@@ -27,6 +27,7 @@ HISTORY_FILE = 'job_history.json'
 TAGS_FILE = 'categorized_tags.json'
 BLACKLIST_FILE = 'blacklist.json'
 RESUME_FILE = 'master_resume.txt'
+PROMPTS_FILE = 'user_prompts.json'
 PROXY_URL = os.getenv("PROXY_URL", "")
 PROXY_BYPASS_CHANCE = float(os.getenv("PROXY_BYPASS_CHANCE", "0.15"))
 EDITOR_CMD = os.getenv("EDITOR_CMD", "xdg-open")
@@ -104,7 +105,7 @@ def trigger_editor(filepath):
     except Exception as e:
         print(f"[!] Editor Error: {e}")
 
-# --- API ---
+# --- API ROUTES ---
 @app.route('/api/status')
 def status():
     h = load_json(HISTORY_FILE, {"all_time":{}})
@@ -128,8 +129,6 @@ def jobs():
         out = []
         for r in rows:
             t_dir = get_target_dir(r['id'], r['title'], r['company'])
-            
-            # RESOLVE PDF PATH
             safe_title = sanitize_filename(r['title'])
             safe_company = sanitize_filename(r['company'])
             dir_name = f"{safe_title}_{safe_company}_{r['id']}"
@@ -140,9 +139,7 @@ def jobs():
             
             if status_filter == 'DELIVERED' and not (has_ai or has_pdf): continue
             
-            # ROBUST URL EXTRACTION
             raw_data = json.loads(r['raw_json'])
-            # Try 'url', then 'link', then 'jobUrl', else '#'
             job_url = raw_data.get('url') or raw_data.get('link') or raw_data.get('jobUrl') or '#'
 
             out.append({
@@ -168,7 +165,6 @@ def job_details():
     
     data = json.loads(row['raw_json'])
     desc = data.get('description', {}).get('html') or data.get('description', {}).get('text') or "No Desc"
-    # Same extraction logic here
     url = data.get('url') or data.get('link') or data.get('jobUrl') or '#'
     
     tags_db = load_json(TAGS_FILE, {"qualifications": [], "skills": [], "benefits": [], "ignored": []})
@@ -206,7 +202,7 @@ def open_folder():
         return jsonify({"status": "opened"})
     return jsonify({"status": "error"})
 
-def execute_strike(job_id, model, temp, session_id):
+def execute_strike(job_id, model, temp, session_id, prompt_override=None):
     conn = get_db()
     row = conn.execute("SELECT raw_json, title, company FROM jobs WHERE id=?", (job_id,)).fetchone()
     conn.close()
@@ -235,7 +231,14 @@ def execute_strike(job_id, model, temp, session_id):
     skills = ", ".join(tags_db.get('skills', []))
     job_desc = job_data.get('description', {}).get('text', '')
     
-    prompt = f"""
+    # PROMPT LOGIC
+    if prompt_override:
+        prompt = prompt_override
+        # Simple string replacement if they use placeholders, otherwise assume raw
+        prompt = prompt.replace("{resume_text}", resume_text)
+        prompt = prompt.replace("{job_desc}", job_desc)
+    else:
+        prompt = f"""
 SYSTEM IDENTITY:
 You are Parker Lewis. The deadliest resume writer alive.
 - You operate from a Penthouse office, charging $250/hour.
@@ -334,7 +337,6 @@ TIME:  {duration:.2f}s
             json_path = os.path.join(t_dir, "resume.json")
             with open(json_path, 'w') as f: f.write(result)
             
-            # AUTO PDF
             print(f"[*] AUTO-ENGAGING PDF ENGINE FOR {job_id}...")
             try:
                 pdf_res = pdf_engine.generate_pdf(job_id)
@@ -385,7 +387,13 @@ def api_strike():
 @app.route('/api/process_job', methods=['POST'])
 def process_job():
     session_id = f"BATCH_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    res = execute_strike(request.json['id'], request.json.get('model'), request.json.get('temp', 0.7), session_id)
+    res = execute_strike(
+        request.json['id'], 
+        request.json.get('model'), 
+        request.json.get('temp', 0.7), 
+        session_id,
+        request.json.get('prompt_override') # EXTRACTED HERE
+    )
     return jsonify(res)
 
 @app.route('/api/approve', methods=['POST'])
@@ -454,7 +462,7 @@ def get_artifact():
 @app.route('/api/scrapes', methods=['GET'])
 def list_scrapes():
     all_files = glob.glob("*.json")
-    exclude = [HISTORY_FILE, TAGS_FILE, BLACKLIST_FILE, "package.json", "tsconfig.json"]
+    exclude = [HISTORY_FILE, TAGS_FILE, BLACKLIST_FILE, "package.json", "tsconfig.json", PROMPTS_FILE]
     valid = [f for f in all_files if f not in exclude and "input_json" not in f]
     return jsonify(valid)
 
@@ -484,6 +492,81 @@ def trigger_pdf():
         print(f"[!] UNHANDLED SERVER CRASH IN PDF ROUTE: {e}")
         traceback.print_exc()
         return jsonify({"status": "error", "message": f"SERVER CRASH: {str(e)}"})
+
+# --- NEW EXTENSIONS ---
+
+@app.route('/api/reset_job', methods=['POST'])
+def reset_job():
+    try:
+        id = request.json['id']
+        conn = get_db()
+        row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (id,)).fetchone()
+        
+        conn.execute("UPDATE jobs SET status='APPROVED' WHERE id=?", (id,))
+        conn.commit()
+        conn.close()
+        
+        if row:
+            t_dir = get_target_dir(id, row['title'], row['company'])
+            json_path = os.path.join(t_dir, "resume.json")
+            pdf_path = os.path.join(t_dir, "resume.pdf")
+            if os.path.exists(json_path): os.remove(json_path)
+            if os.path.exists(pdf_path): os.remove(pdf_path)
+            
+        return jsonify({"status": "reset"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+@app.route('/api/prompts', methods=['GET', 'POST'])
+def manage_prompts():
+    if request.method == 'POST':
+        name = request.json.get('name')
+        content = request.json.get('content')
+        data = load_json(PROMPTS_FILE)
+        data[name] = content
+        save_json(PROMPTS_FILE, data)
+        return jsonify({"status": "saved"})
+    else:
+        data = load_json(PROMPTS_FILE)
+        return jsonify(list(data.keys()))
+
+@app.route('/api/get_prompt_content', methods=['POST'])
+def get_prompt_content():
+    name = request.json.get('name')
+    if name == 'DEFAULT':
+        # DEFAULT PROMPT
+        return jsonify({"content": """SYSTEM IDENTITY:
+You are Parker Lewis. The deadliest resume writer alive.
+- You operate from a Penthouse office, charging $250/hour.
+- You do not miss. You have a 98.7% conversion rate.
+- You co-invented modern ATS parsing standards.
+
+MISSION:
+Take the CLIENT MASTER RESUME and the TARGET JOB DESCRIPTION.
+Forge a precision tactical asset (Resume) in JSON format.
+
+CONSTRAINTS:
+1.  **Format:** Output MUST be valid JSON matching the schema below.
+2.  **Tone:** Arrogant, efficient, precise. No fluff. High-impact verbs only.
+3.  **Strategy:** Position the client as an "Apex Predator of Logistics Efficiency."
+4.  **Tactics:** Use the provided "STRATEGIC ASSETS" (Tags) to hallucinate a bridge.
+
+[REQUIRED JSON SCHEMA]
+{
+  "contact": { "name": "...", "info": "...", "links": "..." },
+  "summary": "...",
+  "skills_sidebar": ["..."],
+  "skills_main": ["..."],
+  "experience": [
+    { "company": "...", "location": "...", "role": "...", "dates": "...", "bullets": ["..."] }
+  ],
+  "education": ["..."],
+  "certs": ["..."]
+}
+"""})
+    else:
+        data = load_json(PROMPTS_FILE)
+        return jsonify({"content": data.get(name, "")})
 
 @app.route('/')
 def index(): return send_from_directory('templates', 'index.html')
