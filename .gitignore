@@ -1,39 +1,18 @@
-# --- SECURITY & PII ---
+.DS_Store
 .env
-groq_keys.env
-master_resume.txt
-my_skills.json
-job_history.json
-blacklist.json
-user_prompts.json
-
-# --- ENVIRONMENT ---
-.venv/
-venv/
-bin/
-lib/
-lib64/
-share/
-pyvenv.cfg
+.env.local
+.env.*
+*.log
+*.sqlite3
+*.db
+secrets.json
+keys.json
+credentials.json
 __pycache__/
 *.pyc
-
-# --- DATA & ARTIFACTS ---
-*.db
-*.sqlite3
-targets/
-gauntlet/
-auto_archive/
-job_descriptions/
-input_json/
-*.log
-*.pdf
-
-# --- SCRAPED DATA ---
-dataset_*.json
-Logistics Coordinator*.json
-snippet_*.txt
-migrate.py
-
-# --- OS JUNK ---
-.DS_Store
+.venv/
+venv/
+env/
+dist/
+build/
+*.egg-info/

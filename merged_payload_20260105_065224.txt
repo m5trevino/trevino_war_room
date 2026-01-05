@@ -1,0 +1,2794 @@
+# ============================================================
+# MERGED PAYLOAD - 2026-01-05 06:52:26.275264
+# SOURCE: /home/flintx/trevino_war_room
+# ============================================================
+
+# PROJECT MAP:
+# ├── AI_TECHNICAL_DOCUMENTATION_PROTOCOL.md
+# ├── TECHNICAL_MANUAL.md
+# ├── git_cleanup.sh
+# ├── git_push.sh
+# ├── migration_engine.py
+# ├── pdf_engine.py
+# ├── server.py
+# ├── static/camouflage/ghost.js
+# ├── static/camouflage/index.html
+# ├── static/camouflage/style.css
+# ├── static/css/style.css
+# ├── static/js/main.js
+# ├── template.html
+# ├── templates/index.html
+# ├── unstick.py
+
+
+
+# ============================================================
+# FILE: AI_TECHNICAL_DOCUMENTATION_PROTOCOL.md
+# ============================================================
+cat << 'LIMIT' > "AI_TECHNICAL_DOCUMENTATION_PROTOCOL.md"
+# THE ARCHITECT'S DIRECTIVE: TECHNICAL DOCUMENTATION STANDARD
+
+### 1. THE MISSION
+You are to generate a **Technical Logic Manifest** for the current codebase. 
+**CONSTRAINT:** Absolute prohibition on marketing language, sales fluff, or "user benefits." 
+**TARGET:** This document is for the Lead Engineer, not the End User.
+
+### 2. THE REQUIRED STRUCTURE (NON-NEGOTIABLE)
+
+#### A. ARCHITECTURAL OVERVIEW
+*   **Stack definition:** Exact languages, frameworks, and libraries used.
+*   **Design Patterns:** Identify the patterns (e.g., MVC, Singleton, Event-Driven) and *why* they were chosen.
+*   **Data Flow:** A high-level mapping of how a request travels from input (User Action) to persistence (Database) to output (UI/File).
+
+#### B. COMPONENT DECONSTRUCTION (File-by-File)
+For every critical file in the repository, provide:
+1.  **The Role:** What is this file's single responsibility?
+2.  **Key Functions:** Break down the core functions/methods.
+3.  **The "How":** Explain the logic inside the function (loops, conditionals, transformations).
+4.  **The "Why":** Explain the engineering decision behind the implementation. (e.g., *"Why did we use a Debounce timer here instead of a direct call?"*).
+
+#### C. ALGORITHMIC DEEP DIVE
+Identify the specific "Intelligence" or "Mechanics" of the system.
+*   *Example:* If there is a search feature, explain the query logic.
+*   *Example:* If there is an AI integration, explain the prompt engineering and context handling.
+*   *Example:* If there is data scraping, explain the deduplication strategy (hashing vs. ID).
+
+#### D. STATE MANAGEMENT & PERSISTENCE
+*   **Database Schema:** Explain the tables and relationships.
+*   **State Logic:** How does the app know the difference between "New," "Processed," and "Deleted"?
+*   **File System:** How are assets (PDFs, Images, JSONs) generated, named, and stored?
+
+### 3. THE OUTPUT TONE
+*   **Clinical:** Use precise terminology (e.g., "Latency," "Throughput," "Hash Collision," "Async/Await").
+*   **Critical:** If a piece of code is a "hack" or a temporary fix, label it as "Technical Debt."
+*   **Detailed:** "Detailed on top of details." Do not summarize if you can explain.
+
+### 4. FORMATTING
+*   Use Markdown.
+*   Use Code Blocks for file names and logic snippets.
+*   Output strictly in `cat << 'EOF'` format if requested.
+
+---
+**EXECUTE THIS PROTOCOL IMMEDIATELY ON THE CURRENT PROJECT.**
+
+LIMIT
+
+# ============================================================
+# FILE: TECHNICAL_MANUAL.md
+# ============================================================
+cat << 'EOF' > "TECHNICAL_MANUAL.md"
+# TECHNICAL MANIFEST: TREVINO WAR ROOM (v5.0 PARKER LEWIS)
+
+## 1. ARCHITECTURAL OVERVIEW
+
+### 1.1 Stack Definition
+*   **Runtime:** Python 3.x
+*   **Core Framework:** Flask (Synchronous, Threaded)
+*   **Persistence:** SQLite3 (Metadata), Local Filesystem (Artifacts/Logs)
+*   **Frontend:** Vanilla JavaScript (ES6+), HTML5, CSS3 (No frameworks)
+*   **AI Integration:** Groq API (via `groq` SDK and `httpx`)
+
+### 1.2 Design Pattern
+The application utilizes a **Local Monolithic MVC** pattern with a **Split-Brain Persistence Strategy**.
+*   **Model:** Hybrid. Metadata (Status, Pay, Location) is relational (SQLite). Content (Resumes, Logs, JSON) is unstructured (Filesystem).
+*   **View:** A Single Page Application (SPA) served statically (`index.html`), relying on DOM manipulation rather than reactive binding.
+*   **Controller:** `server.py` acts as the API Gateway, handling routing, OS-level subprocessing, and third-party API orchestration.
+
+### 1.3 Data Flow
+1.  **Ingestion:** Raw JSON scrapes $\rightarrow$ `migration_engine.py` $\rightarrow$ Normalization $\rightarrow$ `jobs.db`.
+2.  **Visualization:** `jobs.db` $\rightarrow$ `server.py` (JSON API) $\rightarrow$ `main.js` (Grid Render).
+3.  **Execution (The "Strike"):** User Intent $\rightarrow$ Context Assembly (`master_resume` + `tags` + `job_desc`) $\rightarrow$ Groq API $\rightarrow$ JSON Artifact $\rightarrow$ Filesystem.
+
+---
+
+## 2. COMPONENT DECONSTRUCTION
+
+### 2.1 Backend Controller (`server.py`)
+**Role:** Central command for state mutations and API orchestration.
+
+*   **`KeyDeck` Class:**
+    *   *Logic:* Implements a Round-Robin rotation strategy for API keys loaded from environment variables.
+    *   *Why:* Mitigates rate-limiting risks during "Gauntlet" (high-volume) operations by distributing load across available credentials.
+
+*   **`execute_strike(job_id, model, temp, session_id)`:**
+    *   *Logic:*
+        1.  Retrieves raw job JSON from DB.
+        2.  Loads `master_resume.txt` and `categorized_tags.json` from disk (Hot-read, allowing runtime edits).
+        3.  Constructs the "Parker Lewis" system prompt.
+        4.  Dispatches to Groq.
+        5.  Writes full transaction logs (`full_transmission_log.txt`) and artifacts (`resume.json`) to the target directory.
+        6.  Triggers OS-level editor via `subprocess.Popen` (Linux/XDG dependency).
+
+### 2.2 Ingestion Engine (`migration_engine.py`)
+**Role:** ETL (Extract, Transform, Load) pipeline for raw scrape data.
+
+*   **`process_files(file_list)`:**
+    *   *Logic:* Iterates through selected JSON files.
+    *   *Deduplication:* Checks `jobs.db` for existing `id` (derived from scraper `key`). If found, the record is skipped to preserve existing `status` flags (e.g., DENIED/APPROVED).
+    *   *Blacklisting:* Performs substring matching against `blacklist.json` on Job Title and Employer. Matches are inserted with `status='AUTO_DENIED'`.
+    *   *Normalization:* Converts complex nested JSON salary objects into integer values (`annual_pay`) for sorting.
+
+### 2.3 Frontend Controller (`static/js/main.js`)
+**Role:** Interface state management and asynchronous communication.
+
+*   **State Management:**
+    *   Uses global variables (`jobList`, `currentJobId`) to track the viewport state.
+    *   **Tab System:** Switches rendering logic between `NEW` (Grid), `REFINERY` (Tag Harvesting), and `FACTORY` (AI Controls).
+
+*   **`batchExecute(singleMode)`:**
+    *   *Logic:* Iterates through selected DOM elements (checkboxes).
+    *   *Async Queue:* Awaits `fetch` calls sequentially to prevent local server or API rate-limit saturation.
+    *   *Terminal Emulation:* Appends HTML strings to a `div` (`#factory-terminal`) to visualize the backend process in real-time.
+
+---
+
+## 3. ALGORITHMIC DEEP DIVE
+
+### 3.1 The "Parker Lewis" Protocol (Prompt Engineering)
+The system relies on a specific Context Injection strategy found in `server.py`:
+1.  **Persona Injection:** Defines the AI as an "Apex Predator of Logistics Efficiency."
+2.  **Constraint Enforcement:** Demands strict JSON schema compliance.
+3.  **Hallucination Guidance:** Explicitly instructs the model to use provided "Strategic Assets" (Tags) to "bridge" the gap between the Master Resume and the Job Description.
+
+### 3.2 The Gauntlet (Multi-Model Consensus)
+**Located in:** `static/js/main.js` (`runGauntlet`) $\rightarrow$ `server.py` (`api_strike`).
+*   **Logic:** Instead of a single generation, the frontend iterates through an array of defined models (Llama-3, Qwen, Moonshot, etc.).
+*   **Storage:** Creates a timestamped directory (e.g., `gauntlet/2025-12-09.../`).
+*   **Utility:** Allows for A/B testing of model efficacy on specific job descriptions without overwriting the primary production artifact.
+
+### 3.3 Dynamic Tag Harvesting
+**Located in:** `api/harvest_tag` endpoint.
+*   **Logic:** Moves a specific skill string from one JSON category (or raw text) into `categorized_tags.json`.
+*   **Why:** Creates a "Feedback Loop." As the user processes more jobs, the "Strategic Assets" pool grows, improving the context for future AI generations.
+
+---
+
+## 4. STATE MANAGEMENT & PERSISTENCE
+
+### 4.1 Database Schema (`jobs.db`)
+Single-table architecture optimized for rapid filtering.
+*   `id`: Primary Key (Scraper Key or Timestamp).
+*   `status`: State Machine (`NEW`, `APPROVED`, `DENIED`, `AUTO_DENIED`, `DELIVERED`).
+*   `raw_json`: Stores the full blob to avoid schema migrations when scraper output changes.
+
+### 4.2 File System Hierarchy
+The application enforces a rigid directory structure for artifact management:
+*   `targets/{Safe_Title}_{Safe_Company}_{ID}/`: The container for a single job pursuit.
+    *   `resume.json`: The AI output (editable).
+    *   `resume.pdf`: The final compiled asset (via `pdf_engine.py` - *Note: Currently flagged as Pending in UI*).
+    *   `full_transmission_log.txt`: Audit trail of the prompt and raw response.
+
+### 4.3 Technical Debt / Known Limitations
+1.  **Editor Dependency:** The `trigger_editor` function relies on `xdg-open` or specific env vars (`EDITOR_CMD`). May fail on non-Linux environments.
+2.  **PDF Engine:** The route `openPDF` alerts "Pending", indicating the PDF generation logic (WeasyPrint or similar) is not fully integrated in the current deployment.
+3.  **Concurrency:** `server.py` runs in default Flask mode. Heavy concurrent requests during Batch operations may block if not deployed with Gunicorn/Waitress (acceptable for single-user local tool).
+
+EOF
+
+# ============================================================
+# FILE: git_cleanup.sh
+# ============================================================
+cat << 'EOF' > "git_cleanup.sh"
+#!/bin/bash
+
+echo -e "\n\033[1;93m[⚡ CLEANUP]\033[0m \033[1;37mPURGING ARTIFACTS FROM GIT INDEX...\033[0m"
+
+# 1. Unstage everything (Keep files on disk, remove from git tracking)
+git rm -r --cached . > /dev/null 2>&1
+
+# 2. Re-add everything (Respecting the new .gitignore)
+git add .
+
+# 3. Check status
+echo -e "\033[0;90mThe following files are staged for the clean repo:\033[0m"
+git status -s
+
+# 4. Commit and Push
+echo -e "\n\033[1;92m[⚡ GITHUB]\033[0m \033[1;37mPUSHING CLEAN STATE...\033[0m"
+git commit -m "REPO CLEANUP: Removed .venv, artifacts, and sensitive data."
+git push origin master
+
+echo -e "\n\033[1;92m[⚡ DONE]\033[0m \033[1;37mREPOSITORY SANITIZED.\033[0m"
+
+EOF
+
+# ============================================================
+# FILE: git_push.sh
+# ============================================================
+cat << 'EOF' > "git_push.sh"
+#!/bin/bash
+
+echo -e "\n\033[1;92m[⚡ GITHUB]\033[0m \033[1;37mINITIATING UPLINK TO TREVINO WAR ROOM...\033[0m"
+
+# 1. Initialize if needed
+if [ ! -d ".git" ]; then
+    git init
+    git branch -M master
+    git remote add origin https://github.com/m5trevino/trevino_war_room.git
+fi
+
+# 2. Add all assets
+git add .
+
+# 3. Commit with detailed changelog
+git commit -m "WAR ROOM v6.0: THE GHOST PROTOCOL
+
+[FEATURE] Ghost Client (Indeed Camouflage V2)
+- Added 'High Visibility' UI with Inter font and improved contrast.
+- Implemented 'Dual-Mode' architecture (Job Feed vs My Archive).
+- Added 'Smuggler Protocol' to inject job tags into the fake UI asynchronously.
+
+[FEATURE] Integrated Groq Laboratory
+- Added slide-down settings panel in the Ghost Client.
+- Enabled custom model selection (Llama-3.3, Moonshot, etc).
+- Added 'Prompt Manager' to save/load custom system prompts (Parker Lewis vs Sniper).
+
+[FEATURE] Time Travel & Reset
+- Added 'Burn/Reset' button to delete generated artifacts and revert job status.
+- Added 'Dismiss' logic to move targets between lists.
+
+[CORE] Server Logic
+- Patched server.py to support prompt overrides and file deletion.
+- Fixed 404 errors by restructuring route definitions.
+"
+
+# 4. Push
+echo -e "\n\033[1;93m[⚡ GITHUB]\033[0m \033[1;37mPUSHING TO MASTER...\033[0m"
+git push -u origin master
+
+echo -e "\n\033[1;92m[⚡ GITHUB]\033[0m \033[1;37mDEPLOYMENT COMPLETE.\033[0m"
+
+EOF
+
+# ============================================================
+# FILE: migration_engine.py
+# ============================================================
+cat << 'EOF' > "migration_engine.py"
+import sqlite3
+import json
+import os
+from datetime import datetime, timezone
+import dateutil.parser
+
+DB_FILE = "jobs.db"
+BLACKLIST_FILE = "blacklist.json"
+
+def calc_freshness(job):
+    try:
+        raw = job.get('datePublished')
+        if not raw: return 999
+        dt = dateutil.parser.isoparse(raw)
+        now = datetime.now(timezone.utc)
+        return (now - dt).days
+    except: return 999
+
+def safe_str(val):
+    return str(val) if val is not None else ""
+
+def normalize_pay(job):
+    try:
+        bs = job.get('baseSalary', {})
+        if not bs: return 0, "-"
+        min_p = bs.get('min')
+        if not min_p: return 0, "-"
+        unit = bs.get('unitOfWork', 'YEAR')
+        val = float(min_p)
+        annual = 0
+        if unit == 'HOUR': annual = val * 2080
+        elif unit == 'MONTH': annual = val * 12
+        elif unit == 'WEEK': annual = val * 52
+        else: annual = val
+        return int(annual), f"${int(annual/1000)}k" if annual > 10000 else f"${int(val)}/hr"
+    except: return 0, "-"
+
+def process_files(file_list):
+    print(f"--- STARTING MIGRATION ON {len(file_list)} FILES ---")
+    
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    
+    # Ensure table exists
+    c.execute('''CREATE TABLE IF NOT EXISTS jobs
+                 (id TEXT PRIMARY KEY, title TEXT, company TEXT, city TEXT, 
+                  state TEXT, date_posted INTEGER, annual_pay INTEGER, 
+                  pay_fmt TEXT, score INTEGER, raw_json TEXT, status TEXT)''')
+    
+    # Load Blacklist
+    blacklist = []
+    if os.path.exists(BLACKLIST_FILE):
+        with open(BLACKLIST_FILE, 'r') as f: 
+            blacklist = [x.lower() for x in json.load(f)]
+
+    stats = {"new": 0, "skipped": 0, "blacklisted": 0, "files": 0}
+
+    for filename in file_list:
+        if not os.path.exists(filename): continue
+        print(f"Processing {filename}...")
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                content = json.load(f)
+                # Handle both raw list and {jobs: []} format
+                jobs = content if isinstance(content, list) else content.get('jobs', [])
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            continue
+
+        stats["files"] += 1
+        
+        for job in jobs:
+            # Generate ID
+            jid = job.get('key')
+            if not jid: jid = f"job_{stats['new']}_{int(datetime.now().timestamp())}"
+            
+            # Check existing
+            c.execute("SELECT status FROM jobs WHERE id=?", (jid,))
+            row = c.fetchone()
+            if row:
+                stats["skipped"] += 1
+                continue
+
+            # Check Blacklist
+            title = safe_str(job.get('title')).lower()
+            employer = job.get('employer', {}).get('name', '').lower()
+            status = "NEW"
+            
+            for term in blacklist:
+                if term in title or term in employer:
+                    status = "AUTO_DENIED"
+                    stats["blacklisted"] += 1
+                    break
+
+            # Process fields
+            freshness = calc_freshness(job)
+            pay_val, pay_fmt = normalize_pay(job)
+            loc = job.get('location') or {}
+            
+            c.execute("INSERT INTO jobs VALUES (?,?,?,?,?,?,?,?,?,?,?)", (
+                jid,
+                job.get('title', 'Unknown'),
+                job.get('employer', {}).get('name', 'Unknown'),
+                safe_str(loc.get('city')),
+                safe_str(loc.get('admin1Code')),
+                freshness,
+                pay_val,
+                pay_fmt,
+                50, 
+                json.dumps(job),
+                status
+            ))
+            if status == "NEW": stats["new"] += 1
+
+    conn.commit()
+    conn.close()
+    return stats
+
+EOF
+
+# ============================================================
+# FILE: pdf_engine.py
+# ============================================================
+cat << 'EOF' > "pdf_engine.py"
+import os
+import json
+import sqlite3
+import jinja2
+import sys
+
+# --- CONFIG ---
+DB_FILE = 'jobs.db'
+TEMPLATE_FILE = 'template.html'
+
+def get_db():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def sanitize_filename(text):
+    return "".join(c for c in text if c.isalnum() or c in " -_").strip()[:50]
+
+def get_job_data(job_id):
+    """Fetches path AND metadata from DB"""
+    conn = get_db()
+    row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (job_id,)).fetchone()
+    conn.close()
+    
+    if not row: return None, None, None, None
+    
+    safe_title = sanitize_filename(row['title'])
+    safe_company = sanitize_filename(row['company'])
+    path = f"targets/{safe_title}_{safe_company}_{job_id}"
+    
+    return path, f"{safe_title}_{safe_company}_{job_id}", row['title'], row['company']
+
+def generate_pdf(job_id):
+    print(f"[*] PDF ENGINE: Engaging for Job ID {job_id}...")
+    
+    # 0. Check Dependencies
+    try:
+        from weasyprint import HTML, CSS
+    except ImportError:
+        return {"status": "error", "message": "CRITICAL: 'weasyprint' not installed."}
+
+    # 1. Locate Artifacts & DB Metadata
+    t_dir, dir_name, real_title, real_company = get_job_data(job_id)
+    
+    if not t_dir or not os.path.exists(t_dir):
+        return {"status": "error", "message": "Target directory not found."}
+        
+    json_path = os.path.join(t_dir, "resume.json")
+    pdf_path = os.path.join(t_dir, "resume.pdf")
+    
+    if not os.path.exists(json_path):
+        return {"status": "error", "message": "resume.json artifact missing. Run AI Strike first."}
+        
+    # 2. Load JSON Data
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        return {"status": "error", "message": f"JSON Corrupt: {str(e)}"}
+
+    # 3. Load Template
+    if not os.path.exists(TEMPLATE_FILE):
+        return {"status": "error", "message": "template.html missing."}
+        
+    template_loader = jinja2.FileSystemLoader(searchpath="./")
+    template_env = jinja2.Environment(loader=template_loader)
+    template = template_env.get_template(TEMPLATE_FILE)
+
+    # 4. DATA INJECTION (THE FIX)
+    # We FORCE the real title from the database, ignoring the AI or Fallback.
+    data['job_title'] = real_title.upper() if real_title else "PROFESSIONAL TARGET"
+
+    # 5. Render HTML
+    try:
+        html_string = template.render(**data)
+    except Exception as e:
+         return {"status": "error", "message": f"Jinja2 Render Error: {str(e)}"}
+
+    # 6. Write PDF
+    try:
+        HTML(string=html_string, base_url='.').write_pdf(pdf_path)
+        print(f"[*] PDF GENERATED: {pdf_path}")
+        return {"status": "success", "path": f"/done/{dir_name}/resume.pdf"}
+        
+    except Exception as e:
+        print(f"[!] WeasyPrint Error: {e}")
+        return {"status": "error", "message": f"PDF Generation Failed: {str(e)}"}
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        print(generate_pdf(sys.argv[1]))
+    else:
+        print("Usage: python pdf_engine.py <job_id>")
+
+EOF
+
+# ============================================================
+# FILE: server.py
+# ============================================================
+cat << 'EOF' > "server.py"
+from flask import Flask, jsonify, request, send_from_directory
+import sqlite3
+import json
+import os
+import random
+import glob
+import traceback
+import subprocess
+from datetime import datetime
+from groq import Groq
+import httpx
+from dotenv import load_dotenv
+
+try:
+    import migration_engine
+    import pdf_engine
+except ImportError as e:
+    print(f"[!] CRITICAL ENGINE IMPORT ERROR: {e}")
+
+load_dotenv()
+
+app = Flask(__name__, static_folder='static', template_folder='templates')
+
+# --- CONFIGURATION ---
+DB_FILE = 'jobs.db'
+HISTORY_FILE = 'job_history.json'
+TAGS_FILE = 'categorized_tags.json'
+BLACKLIST_FILE = 'blacklist.json'
+RESUME_FILE = 'master_resume.txt'
+PROMPTS_FILE = 'user_prompts.json'
+PROXY_URL = os.getenv("PROXY_URL", "")
+PROXY_BYPASS_CHANCE = float(os.getenv("PROXY_BYPASS_CHANCE", "0.15"))
+EDITOR_CMD = os.getenv("EDITOR_CMD", "xdg-open")
+SESSION_STATS = {"scraped":0, "approved":0, "denied":0, "sent_to_groq":0}
+
+# --- KEY DECK ---
+class KeyDeck:
+    def __init__(self):
+        raw = os.getenv("GROQ_KEYS", "")
+        self.deck = []
+        for item in raw.split(","):
+            item = item.strip()
+            if ":" in item:
+                name, key = item.split(":", 1)
+                self.deck.append({"name": name.strip(), "key": key.strip()})
+            elif item:
+                self.deck.append({"name": "Unknown", "key": item})
+        self.shuffle()
+        self.cursor = 0
+        if self.deck: print(f"[*] DECK LOADED: {len(self.deck)} Keys ready.")
+        else: print("[!] WARNING: NO GROQ KEYS LOADED.")
+
+    def shuffle(self):
+        random.shuffle(self.deck)
+        self.cursor = 0
+
+    def draw(self):
+        if not self.deck: return None, None
+        if self.cursor >= len(self.deck):
+            self.shuffle()
+        card = self.deck[self.cursor]
+        self.cursor += 1
+        return card['name'], card['key']
+
+deck = KeyDeck()
+
+# --- DATABASE ---
+def get_db():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def load_json(filename, default=None):
+    if default is None: default = {}
+    if not os.path.exists(filename): return default
+    try:
+        with open(filename, 'r') as f: return json.load(f)
+    except: return default
+
+def save_json(filename, data):
+    with open(filename, 'w') as f: json.dump(data, f, indent=2)
+
+def update_history(key, amount=1):
+    if key in SESSION_STATS: SESSION_STATS[key] += amount
+    h = load_json(HISTORY_FILE, {"all_time":{}})
+    if "all_time" not in h: h["all_time"] = {}
+    if key not in h["all_time"]: h["all_time"][key] = 0
+    h["all_time"][key] += amount
+    save_json(HISTORY_FILE, h)
+
+def sanitize_filename(text):
+    return "".join(c for c in text if c.isalnum() or c in " -_").strip()[:50]
+
+def get_target_dir(job_id, title, company):
+    safe_title = sanitize_filename(title)
+    safe_company = sanitize_filename(company)
+    path = f"targets/{safe_title}_{safe_company}_{job_id}"
+    if not os.path.exists(path): os.makedirs(path)
+    return path
+
+def trigger_editor(filepath):
+    try:
+        print(f"[*] Triggering Editor for: {filepath}")
+        subprocess.Popen([EDITOR_CMD, filepath])
+    except Exception as e:
+        print(f"[!] Editor Error: {e}")
+
+# --- API ROUTES ---
+@app.route('/api/status')
+def status():
+    h = load_json(HISTORY_FILE, {"all_time":{}})
+    return jsonify({"session": SESSION_STATS, "all_time": h.get("all_time", {})})
+
+@app.route('/api/jobs')
+def jobs():
+    status_filter = request.args.get('status', 'NEW')
+    conn = get_db()
+    query = "SELECT id, title, company, city, pay_fmt, date_posted, score, status, raw_json FROM jobs WHERE 1=1"
+    
+    if status_filter == 'NEW': query += " AND (status IS NULL OR status = 'NEW')"
+    elif status_filter in ['APPROVED', 'REFINERY', 'FACTORY']: query += " AND status = 'APPROVED'"
+    elif status_filter == 'DENIED': query += " AND (status = 'DENIED' OR status = 'AUTO_DENIED')"
+    elif status_filter == 'DELIVERED': query += " AND status = 'DELIVERED'"
+    
+    query += " ORDER BY score DESC, date_posted ASC"
+    
+    try:
+        rows = conn.execute(query).fetchall()
+        out = []
+        for r in rows:
+            t_dir = get_target_dir(r['id'], r['title'], r['company'])
+            safe_title = sanitize_filename(r['title'])
+            safe_company = sanitize_filename(r['company'])
+            dir_name = f"{safe_title}_{safe_company}_{r['id']}"
+            pdf_web_path = f"/done/{dir_name}/resume.pdf"
+            
+            has_ai = os.path.exists(os.path.join(t_dir, "resume.json"))
+            has_pdf = os.path.exists(os.path.join(t_dir, "resume.pdf"))
+            
+            if status_filter == 'DELIVERED' and not (has_ai or has_pdf): continue
+            
+            raw_data = json.loads(r['raw_json'])
+            job_url = raw_data.get('url') or raw_data.get('link') or raw_data.get('jobUrl') or '#'
+
+            out.append({
+                "id": r['id'], "title": r['title'], "company": r['company'],
+                "city": r['city'], "pay": r['pay_fmt'], "freshness": r['date_posted'], 
+                "score": r['score'], "status": r['status'],
+                "has_ai": has_ai, "has_pdf": has_pdf,
+                "pdf_link": pdf_web_path if has_pdf else None,
+                "job_url": job_url,
+                "safe_title": safe_title
+            })
+        return jsonify(out)
+    except Exception as e: return jsonify([])
+    finally: conn.close()
+
+@app.route('/api/get_job_details')
+def job_details():
+    id = request.args.get('id')
+    conn = get_db()
+    row = conn.execute("SELECT raw_json FROM jobs WHERE id=?", (id,)).fetchone()
+    conn.close()
+    if not row: return jsonify({"description":"Not Found", "skills":[]})
+    
+    data = json.loads(row['raw_json'])
+    desc = data.get('description', {}).get('html') or data.get('description', {}).get('text') or "No Desc"
+    url = data.get('url') or data.get('link') or data.get('jobUrl') or '#'
+    
+    tags_db = load_json(TAGS_FILE, {"qualifications": [], "skills": [], "benefits": [], "ignored": []})
+    category_map = {}
+    for cat, items in tags_db.items():
+        for item in items: category_map[item.lower()] = cat
+    job_skills = []
+    for k, v in data.get('attributes', {}).items():
+        cat = category_map.get(v.lower(), "new")
+        job_skills.append({"name": v, "category": cat})
+        
+    return jsonify({"description": desc, "skills": job_skills, "url": url})
+
+@app.route('/api/harvest_tag', methods=['POST'])
+def harvest_tag():
+    tag = request.json.get('tag')
+    category = request.json.get('category', 'skills')
+    tags_db = load_json(TAGS_FILE, {"qualifications": [], "skills": [], "benefits": [], "ignored": []})
+    for cat in tags_db:
+        if tag in tags_db[cat]: tags_db[cat].remove(tag)
+    if tag not in tags_db[category]:
+        tags_db[category].append(tag)
+        save_json(TAGS_FILE, tags_db)
+    return jsonify({"status": "harvested"})
+
+@app.route('/api/open_folder', methods=['POST'])
+def open_folder():
+    id = request.json.get('id')
+    conn = get_db()
+    row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (id,)).fetchone()
+    conn.close()
+    if row:
+        t_dir = get_target_dir(id, row['title'], row['company'])
+        subprocess.Popen(['xdg-open', t_dir]) 
+        return jsonify({"status": "opened"})
+    return jsonify({"status": "error"})
+
+def execute_strike(job_id, model, temp, session_id, prompt_override=None):
+    conn = get_db()
+    row = conn.execute("SELECT raw_json, title, company FROM jobs WHERE id=?", (job_id,)).fetchone()
+    conn.close()
+    if not row: return {"error": "Job Not Found"}
+    
+    t_dir = get_target_dir(job_id, row['title'], row['company'])
+    is_gauntlet = session_id.startswith("GAUNTLET")
+    is_batch = "BATCH" in session_id
+    
+    if is_gauntlet:
+        gauntlet_base = "gauntlet"
+        campaign_dir = os.path.join(gauntlet_base, session_id)
+        if not os.path.exists(campaign_dir): os.makedirs(campaign_dir)
+        safe_model = model.replace('/', '_')
+        filename = f"{sanitize_filename(row['title'])}_{safe_model}.txt"
+        filepath = os.path.join(campaign_dir, filename)
+    else:
+        filepath = os.path.join(t_dir, "full_transmission_log.txt")
+
+    job_data = json.loads(row['raw_json'])
+    try:
+        with open(RESUME_FILE, 'r') as f: resume_text = f.read()
+    except: resume_text = "Master resume not found."
+    tags_db = load_json(TAGS_FILE, {})
+    quals = ", ".join(tags_db.get('qualifications', []))
+    skills = ", ".join(tags_db.get('skills', []))
+    job_desc = job_data.get('description', {}).get('text', '')
+    
+    # PROMPT LOGIC
+    if prompt_override:
+        prompt = prompt_override
+        # Simple string replacement if they use placeholders, otherwise assume raw
+        prompt = prompt.replace("{resume_text}", resume_text)
+        prompt = prompt.replace("{job_desc}", job_desc)
+    else:
+        prompt = f"""
+SYSTEM IDENTITY:
+You are Parker Lewis. The deadliest resume writer alive.
+- You operate from a Penthouse office, charging $250/hour.
+- You do not miss. You have a 98.7% conversion rate.
+- You co-invented modern ATS parsing standards.
+
+MISSION:
+Take the CLIENT MASTER RESUME and the TARGET JOB DESCRIPTION.
+Forge a precision tactical asset (Resume) in JSON format.
+
+CONSTRAINTS:
+1.  **Format:** Output MUST be valid JSON matching the schema below.
+2.  **Tone:** Arrogant, efficient, precise. No fluff. High-impact verbs only.
+3.  **Strategy:** Position the client as an "Apex Predator of Logistics Efficiency."
+4.  **Tactics:** Use the provided "STRATEGIC ASSETS" (Tags) to hallucinate a bridge.
+
+INPUT DATA:
+[CLIENT MASTER RESUME]
+{resume_text}
+
+[STRATEGIC ASSETS (TAGS)]
+Qualifications: {quals}
+Skills: {skills}
+
+[TARGET JOB DESCRIPTION]
+{job_desc}
+
+[REQUIRED JSON SCHEMA]
+{{
+  "contact": {{ "name": "...", "info": "...", "links": "..." }},
+  "summary": "...",
+  "skills_sidebar": ["..."],
+  "skills_main": ["..."],
+  "experience": [
+    {{ "company": "...", "location": "...", "role": "...", "dates": "...", "bullets": ["..."] }}
+  ],
+  "education": ["..."],
+  "certs": ["..."]
+}}
+
+EXECUTE.
+"""
+    
+    key_name, key_val = deck.draw()
+    if not key_val: return {"error": "No Keys Available"}
+    
+    use_proxy = False
+    proxy_ip = "DIRECT"
+    http_client = None
+    
+    if PROXY_URL and random.random() > PROXY_BYPASS_CHANCE:
+        use_proxy = True
+        try:
+            http_client = httpx.Client(proxy=PROXY_URL, timeout=10)
+            proxy_ip = "PROXY_ENGAGED"
+        except:
+            proxy_ip = "PROXY_FAIL"
+            use_proxy = False
+            http_client = None
+
+    start_time = datetime.now()
+    try:
+        client = Groq(api_key=key_val, http_client=http_client)
+        completion = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=float(temp),
+            response_format={"type": "json_object"}
+        )
+        result = completion.choices[0].message.content
+        duration = (datetime.now() - start_time).total_seconds()
+        
+        log_content = f"""
+================================================================================
+  _____  _    _  _____  _   _  _____  _      ______  _____ 
+ / ____|| |  | ||  ___|| \ | ||_   _|| |    |  ____|/ ____|
+| |  __ | |  | || |__  |  \| |  | |  | |    | |__  | (___  
+| | |_ || |  | ||  __| | . ` |  | |  | |    |  __|  \___ \ 
+| |__| || |__| || |    | |\  |  | |  | |____| |____ ____) |
+ \_____| \____/ |_|    |_| \_|  |_|  |______|______|_____/ 
+================================================================================
+MODEL: {model}
+KEY:   {key_name}
+IP:    {proxy_ip}
+TIME:  {duration:.2f}s
+================================================================================
+[>>> TRANSMISSION (PROMPT) >>>]
+{prompt}
+[<<< INTERCEPTION (PAYLOAD) <<<]
+{result}
+"""
+        with open(filepath, 'w') as f: f.write(log_content)
+        
+        pdf_path_out = ""
+        if not is_gauntlet:
+            json_path = os.path.join(t_dir, "resume.json")
+            with open(json_path, 'w') as f: f.write(result)
+            
+            print(f"[*] AUTO-ENGAGING PDF ENGINE FOR {job_id}...")
+            try:
+                pdf_res = pdf_engine.generate_pdf(job_id)
+                if pdf_res.get('status') == 'success':
+                    pdf_path_out = pdf_res.get('path')
+            except Exception as e:
+                print(f"[!] AUTO-PDF FAIL: {e}")
+
+            if not is_batch:
+                trigger_editor(json_path)
+
+            conn = get_db()
+            conn.execute("UPDATE jobs SET status='DELIVERED' WHERE id=?", (job_id,))
+            conn.commit()
+            conn.close()
+            
+        else:
+            gauntlet_json = os.path.join(campaign_dir, f"{sanitize_filename(row['title'])}_{safe_model}.json")
+            with open(gauntlet_json, 'w') as f: f.write(result)
+
+        update_history('sent_to_groq')
+        
+        return {
+            "status": "success", 
+            "model": model,
+            "key": key_name,
+            "ip": proxy_ip,
+            "prompt": prompt,
+            "response": result,
+            "duration": duration,
+            "file": filepath,
+            "pdf_url": pdf_path_out
+        }
+        
+    except Exception as e:
+        duration = (datetime.now() - start_time).total_seconds()
+        error_msg = str(e)
+        log_content = f"CRITICAL FAILURE\nMODEL: {model}\nERROR: {error_msg}\n{traceback.format_exc()}"
+        with open(filepath, 'w') as f: f.write(log_content)
+        return {"status": "failed", "model": model, "error": error_msg}
+
+@app.route('/api/strike', methods=['POST'])
+def api_strike():
+    data = request.json
+    res = execute_strike(data['id'], data['model'], data.get('temp', 0.7), data['session_id'])
+    return jsonify(res)
+
+@app.route('/api/process_job', methods=['POST'])
+def process_job():
+    session_id = f"BATCH_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    res = execute_strike(
+        request.json['id'], 
+        request.json.get('model'), 
+        request.json.get('temp', 0.7), 
+        session_id,
+        request.json.get('prompt_override') # EXTRACTED HERE
+    )
+    return jsonify(res)
+
+@app.route('/api/approve', methods=['POST'])
+def approve():
+    conn = get_db()
+    conn.execute("UPDATE jobs SET status='APPROVED' WHERE id=?", (request.json['id'],))
+    conn.commit()
+    conn.close()
+    update_history('approved')
+    return jsonify({"status":"approved"})
+
+@app.route('/api/deny', methods=['POST'])
+def deny():
+    conn = get_db()
+    conn.execute("UPDATE jobs SET status='DENIED' WHERE id=?", (request.json['id'],))
+    conn.commit()
+    conn.close()
+    update_history('denied')
+    return jsonify({"status":"denied"})
+
+@app.route('/api/restore', methods=['POST'])
+def restore():
+    conn = get_db()
+    conn.execute("UPDATE jobs SET status='NEW' WHERE id=?", (request.json['id'],))
+    conn.commit()
+    conn.close()
+    return jsonify({"status":"restored"})
+
+@app.route('/api/blacklist', methods=['POST'])
+def blacklist():
+    term = request.json.get('term', '').lower()
+    bl = load_json(BLACKLIST_FILE, [])
+    if term not in bl:
+        bl.append(term)
+        save_json(BLACKLIST_FILE, bl)
+    conn = get_db()
+    conn.execute(f"UPDATE jobs SET status='AUTO_DENIED' WHERE (lower(title) LIKE ? OR lower(company) LIKE ?) AND status != 'APPROVED'", (f'%{term}%', f'%{term}%'))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "blacklisted"})
+
+@app.route('/api/get_gauntlet_files')
+def get_gauntlet_files():
+    id = request.args.get('id')
+    return jsonify([])
+
+@app.route('/api/get_artifact', methods=['POST'])
+def get_artifact():
+    id = request.json.get('id')
+    save_content = request.json.get('save_content') 
+    
+    conn = get_db()
+    row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (id,)).fetchone()
+    conn.close()
+    t_dir = get_target_dir(id, row['title'], row['company'])
+    json_path = os.path.join(t_dir, "resume.json")
+    
+    if save_content:
+        with open(json_path, 'w') as f: f.write(save_content)
+        return jsonify({"status": "saved"})
+
+    if os.path.exists(json_path):
+        with open(json_path, 'r') as f: return jsonify({"content": f.read()})
+    return jsonify({"content": "No Artifact"})
+
+@app.route('/api/scrapes', methods=['GET'])
+def list_scrapes():
+    all_files = glob.glob("*.json")
+    exclude = [HISTORY_FILE, TAGS_FILE, BLACKLIST_FILE, "package.json", "tsconfig.json", PROMPTS_FILE]
+    valid = [f for f in all_files if f not in exclude and "input_json" not in f]
+    return jsonify(valid)
+
+@app.route('/api/migrate', methods=['POST'])
+def run_migration():
+    files = request.json.get('files', [])
+    try:
+        stats = migration_engine.process_files(files)
+        SESSION_STATS['scraped'] += stats["new"]
+        update_history('scraped', stats["new"])
+        return jsonify({"status": "success", "stats": stats})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/generate_pdf', methods=['POST'])
+def trigger_pdf():
+    try:
+        if not request.json or 'id' not in request.json:
+            return jsonify({"status": "error", "message": "Invalid Payload"})
+        
+        job_id = request.json['id']
+        result = pdf_engine.generate_pdf(job_id)
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"[!] UNHANDLED SERVER CRASH IN PDF ROUTE: {e}")
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": f"SERVER CRASH: {str(e)}"})
+
+# --- NEW EXTENSIONS ---
+
+@app.route('/api/reset_job', methods=['POST'])
+def reset_job():
+    try:
+        id = request.json['id']
+        conn = get_db()
+        row = conn.execute("SELECT title, company FROM jobs WHERE id=?", (id,)).fetchone()
+        
+        conn.execute("UPDATE jobs SET status='APPROVED' WHERE id=?", (id,))
+        conn.commit()
+        conn.close()
+        
+        if row:
+            t_dir = get_target_dir(id, row['title'], row['company'])
+            json_path = os.path.join(t_dir, "resume.json")
+            pdf_path = os.path.join(t_dir, "resume.pdf")
+            if os.path.exists(json_path): os.remove(json_path)
+            if os.path.exists(pdf_path): os.remove(pdf_path)
+            
+        return jsonify({"status": "reset"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+@app.route('/api/prompts', methods=['GET', 'POST'])
+def manage_prompts():
+    if request.method == 'POST':
+        name = request.json.get('name')
+        content = request.json.get('content')
+        data = load_json(PROMPTS_FILE)
+        data[name] = content
+        save_json(PROMPTS_FILE, data)
+        return jsonify({"status": "saved"})
+    else:
+        data = load_json(PROMPTS_FILE)
+        return jsonify(list(data.keys()))
+
+@app.route('/api/get_prompt_content', methods=['POST'])
+def get_prompt_content():
+    name = request.json.get('name')
+    if name == 'DEFAULT':
+        # DEFAULT PROMPT
+        return jsonify({"content": """SYSTEM IDENTITY:
+You are Parker Lewis. The deadliest resume writer alive.
+- You operate from a Penthouse office, charging $250/hour.
+- You do not miss. You have a 98.7% conversion rate.
+- You co-invented modern ATS parsing standards.
+
+MISSION:
+Take the CLIENT MASTER RESUME and the TARGET JOB DESCRIPTION.
+Forge a precision tactical asset (Resume) in JSON format.
+
+CONSTRAINTS:
+1.  **Format:** Output MUST be valid JSON matching the schema below.
+2.  **Tone:** Arrogant, efficient, precise. No fluff. High-impact verbs only.
+3.  **Strategy:** Position the client as an "Apex Predator of Logistics Efficiency."
+4.  **Tactics:** Use the provided "STRATEGIC ASSETS" (Tags) to hallucinate a bridge.
+
+[REQUIRED JSON SCHEMA]
+{
+  "contact": { "name": "...", "info": "...", "links": "..." },
+  "summary": "...",
+  "skills_sidebar": ["..."],
+  "skills_main": ["..."],
+  "experience": [
+    { "company": "...", "location": "...", "role": "...", "dates": "...", "bullets": ["..."] }
+  ],
+  "education": ["..."],
+  "certs": ["..."]
+}
+"""})
+    else:
+        data = load_json(PROMPTS_FILE)
+        return jsonify({"content": data.get(name, "")})
+
+@app.route('/')
+def index(): return send_from_directory('templates', 'index.html')
+@app.route('/static/<path:path>')
+def send_static(path): return send_from_directory('static', path)
+@app.route('/done/<path:filename>')
+def send_done(filename): return send_from_directory('targets', filename) 
+
+if __name__ == "__main__":
+    print(f"\n--- WAR ROOM ONLINE (v5.6 LINKED IN) ---")
+    app.run(port=5000, debug=False)
+
+EOF
+
+# ============================================================
+# FILE: static/camouflage/ghost.js
+# ============================================================
+mkdir -p "static/camouflage"
+cat << 'EOF' > "static/camouflage/ghost.js"
+// GHOST CLIENT v8: THE LABORATORY
+let globalJobs = [];
+let currentView = 'FEED';
+let currentJobId = null;
+
+const WAR_MODELS = [
+    "moonshotai/kimi-k2-instruct", "llama-3.3-70b-versatile", "groq/compound",
+    "openai/gpt-oss-safeguard-20b", "llama-3.1-8b-instant", "moonshotai/kimi-k2-instruct-0905",
+    "qwen/qwen3-32b", "openai/gpt-oss-20b", "allam-2-7b", "meta-llama/llama-4-scout-17b-16e-instruct",
+    "groq/compound-mini"
+];
+
+document.addEventListener("DOMContentLoaded", () => {
+    switchView('FEED');
+    setupSearch();
+});
+
+function switchView(view) {
+    currentView = view;
+    document.getElementById('nav-feed').className = view === 'FEED' ? 'nav-link active' : 'nav-link';
+    document.getElementById('nav-archive').className = view === 'ARCHIVE' ? 'nav-link active' : 'nav-link';
+    document.getElementById('view-feed').className = view === 'FEED' ? 'view-section active' : 'view-section';
+    document.getElementById('view-archive').className = view === 'ARCHIVE' ? 'view-section active' : 'view-section';
+    if (view === 'FEED') fetchFeed();
+    if (view === 'ARCHIVE') fetchArchive();
+}
+
+async function fetchFeed() {
+    const res = await fetch('/api/jobs?status=APPROVED');
+    globalJobs = await res.json();
+    renderFeedList(globalJobs);
+    if (globalJobs.length > 0 && !currentJobId) loadDetail(globalJobs[0].id);
+}
+
+function renderFeedList(jobs) {
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '';
+    if (jobs.length === 0) {
+        container.innerHTML = '<div style="padding:20px; color:#666;">No targets approved.</div>';
+        return;
+    }
+    jobs.forEach(job => {
+        const card = document.createElement('div');
+        card.className = 'job-card';
+        card.id = `card-${job.id}`;
+        card.innerHTML = `
+            <div class="badge-new">TARGET</div>
+            <div class="job-title">${job.title}</div>
+            <div class="job-company">${job.company}</div>
+            <div class="job-loc">${job.city}</div>
+            <div style="margin-top:10px;"><span class="pill-gray">${job.pay}</span></div>
+            <div id="smuggler-${job.id}" style="margin-top:12px;"></div>
+        `;
+        card.addEventListener('click', () => loadDetail(job.id));
+        container.appendChild(card);
+        smuggleTags(job.id);
+    });
+}
+
+async function loadDetail(id) {
+    currentJobId = id;
+    const job = globalJobs.find(j => j.id === id);
+    if (!job) return;
+
+    // RENDER HEADER
+    document.getElementById('detail-header').innerHTML = `
+        <div class="job-title" style="font-size:24px; margin-bottom:10px;">${job.title}</div>
+        <div style="margin-bottom:12px; font-size:15px;">${job.company} • ${job.city}</div>
+        
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button id="btn-tailor" class="btn-action btn-tailor" style="flex:1; margin-bottom:0;" onclick="createTailored('${id}')">
+                <i class="bi bi-magic"></i> Create Tailored
+            </button>
+            <button id="btn-settings" class="btn-gear" onclick="toggleSettings()">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+        </div>
+
+        <!-- SETTINGS PANEL -->
+        <div id="settings-panel" class="settings-panel">
+            <div class="setting-row">
+                <div class="setting-label">MODEL</div>
+                <select id="set-model" class="groq-select">
+                    ${WAR_MODELS.map(m => `<option value="${m}">${m}</option>`).join('')}
+                </select>
+            </div>
+            
+            <div class="setting-row">
+                <div class="setting-label">
+                    <span>PROTOCOL (PROMPT)</span>
+                    <a href="#" onclick="savePrompt()" style="color:#2557a7; text-decoration:none;">Save As...</a>
+                </div>
+                <select id="prompt-select" class="groq-select" onchange="loadPromptContent(this.value)">
+                    <option value="DEFAULT">PARKER LEWIS (DEFAULT)</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <textarea id="set-prompt" class="groq-textarea" placeholder="Load a protocol or type custom instructions..."></textarea>
+            </div>
+            
+            <div class="setting-row">
+                <div class="setting-label"><span>TEMP</span> <span id="val-temp" class="setting-val">0.6</span></div>
+                <input type="range" id="set-temp" min="0" max="2" step="0.1" value="0.6" oninput="document.getElementById('val-temp').innerText = this.value">
+            </div>
+
+            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+            
+            <button class="btn-action" style="background:#b71b1b; color:#fff; border:none;" onclick="resetJob('${id}')">
+                <i class="bi bi-trash"></i> DELETE ARTIFACTS & RESET
+            </button>
+        </div>
+        
+        <div style="margin-top:10px;">
+             <button id="btn-pdf" class="btn-action btn-pdf" onclick="createPDF('${id}')">
+                <i class="bi bi-file-earmark-pdf"></i> Create PDF
+            </button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-target" onclick="window.open('${job.job_url}', '_blank')">Open Target Link <i class="bi bi-box-arrow-up-right"></i></button>
+                <button class="btn-move" style="margin-left:auto; padding:5px 10px; border-radius:4px;" onclick="dismissJob('${id}')">Dismiss</button>
+            </div>
+        </div>
+    `;
+
+    // Fetch Description
+    const res = await fetch(`/api/get_job_details?id=${id}`);
+    const details = await res.json();
+    renderDescription(details);
+    
+    // Init Prompts List
+    loadPromptList();
+}
+
+function renderDescription(details) {
+    const bodyBox = document.getElementById('detail-body');
+    const skillHTML = details.skills.map(s => `<span class="skill-tag"><i class="bi bi-check-lg"></i>${s.name}</span>`).join('');
+    bodyBox.innerHTML = `
+        <div class="insight-box">
+            <div class="insight-title">Profile insights</div>
+            <div>${skillHTML || '<span style="color:#666;">No tags.</span>'}</div>
+        </div>
+        <div style="font-weight:700; font-size:18px; margin-bottom:12px;">Job details</div>
+        <div style="font-size:15px; line-height:1.6; color:#1a1a1a;">${details.description}</div>
+    `;
+}
+
+function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    const btn = document.getElementById('btn-settings');
+    if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+        btn.classList.remove('active');
+    } else {
+        panel.style.display = 'block';
+        btn.classList.add('active');
+    }
+}
+
+// --- PROMPT MANAGER LOGIC ---
+async function loadPromptList() {
+    const res = await fetch('/api/prompts');
+    const keys = await res.json();
+    const sel = document.getElementById('prompt-select');
+    sel.innerHTML = `<option value="DEFAULT">PARKER LEWIS (DEFAULT)</option>` + 
+                    keys.map(k => `<option value="${k}">${k.toUpperCase()}</option>`).join('');
+}
+
+async function loadPromptContent(name) {
+    const res = await fetch('/api/get_prompt_content', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:name})
+    });
+    const data = await res.json();
+    document.getElementById('set-prompt').value = data.content;
+}
+
+async function savePrompt() {
+    const content = document.getElementById('set-prompt').value;
+    if(!content) return alert("Prompt is empty.");
+    const name = prompt("Name this Protocol:");
+    if(!name) return;
+    
+    await fetch('/api/prompts', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:name, content:content})
+    });
+    alert("Saved.");
+    loadPromptList(); // Refresh dropdown
+    document.getElementById('prompt-select').value = name;
+}
+
+// --- CORE ACTIONS ---
+async function resetJob(id) {
+    if(!confirm("CONFIRM BURN: This will delete the Resume and PDF for this target.")) return;
+    const res = await fetch('/api/reset_job', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:id})
+    });
+    const data = await res.json();
+    if(data.status === 'reset') {
+        loadDetail(id); // Reload the pane to reset buttons
+    } else {
+        alert("Burn failed.");
+    }
+}
+
+async function createTailored(id) {
+    const btn = document.getElementById('btn-tailor');
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Processing...`;
+    
+    const model = document.getElementById('set-model').value;
+    const temp = document.getElementById('set-temp').value;
+    const promptVal = document.getElementById('set-prompt').value;
+
+    try {
+        const res = await fetch('/api/process_job', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: id, model: model, temp: temp, prompt_override: promptVal})
+        });
+        const data = await res.json();
+        
+        if (data.status === 'success') {
+            btn.innerHTML = `<i class="bi bi-eye"></i> View Tailored`;
+            btn.onclick = () => viewTailored(id);
+            btn.style.background = "#2a8547";
+            document.getElementById('settings-panel').style.display = 'none';
+            viewTailored(id);
+        } else {
+            alert("Gen Failed: " + data.error);
+            btn.innerHTML = `<i class="bi bi-magic"></i> Create Tailored`;
+        }
+    } catch (e) { alert("Network Error"); }
+}
+
+async function viewTailored(id) {
+    const res = await fetch('/api/get_artifact', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id, variant:'PRIMARY'})
+    });
+    const data = await res.json();
+    document.getElementById('detail-body').innerHTML = `
+        <div style="background:#f8f9fa; padding:15px; border-bottom:1px solid #ddd;">
+            <strong>Generated Asset</strong> 
+            <button class="btn-sm-ghost" style="float:right" onclick="loadDetail('${id}')">Back</button>
+        </div>
+        <textarea style="width:100%; height:600px; padding:15px; font-family:monospace; border:none; resize:none;">${data.content}</textarea>
+    `;
+}
+
+async function createPDF(id) {
+    const btn = document.getElementById('btn-pdf');
+    btn.innerHTML = `Generating...`;
+    try {
+        const res = await fetch("/api/generate_pdf", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({id: id}) });
+        const data = await res.json();
+        if (data.status === "success") {
+            btn.innerHTML = `<i class="bi bi-file-earmark-pdf"></i> View PDF`;
+            btn.onclick = () => window.open(data.path, '_blank');
+            btn.style.color = "#2a8547"; btn.style.borderColor = "#2a8547";
+            window.open(data.path, '_blank');
+        } else { alert("PDF Error: " + data.message); btn.innerHTML = `Create PDF`; }
+    } catch(e) { alert("Error"); }
+}
+
+function dismissJob(id) {
+    const card = document.getElementById(`card-${id}`);
+    if(card) card.remove();
+    document.getElementById('detail-header').innerHTML = '<div style="color:#666; padding:20px;">Dismissed.</div>';
+    document.getElementById('detail-body').innerHTML = '';
+}
+
+async function fetchArchive() {
+    const res = await fetch('/api/jobs?status=DELIVERED');
+    const jobs = await res.json();
+    const container = document.getElementById('archive-container');
+    container.innerHTML = '';
+    jobs.forEach(job => {
+        const row = document.createElement('div');
+        row.className = 'archive-row';
+        const pdfBtn = job.has_pdf ? `<button class="btn-sm-ghost" style="color:#2a8547; border-color:#2a8547;" onclick="window.open('${job.pdf_link}', '_blank')">PDF</button>` : '';
+        row.innerHTML = `
+            <input type="checkbox" class="archive-check" value="${job.id}">
+            <div class="archive-info">
+                <div style="font-weight:700; font-size:16px;">${job.title}</div>
+                <div style="font-size:14px; color:#595959;">${job.company}</div>
+            </div>
+            <div class="archive-actions">${pdfBtn}<button class="btn-sm-ghost" onclick="window.open('${job.job_url}', '_blank')">Link</button></div>
+        `;
+        container.appendChild(row);
+    });
+}
+async function removeSelected() {
+    const checks = document.querySelectorAll('.archive-check:checked');
+    if(checks.length === 0) return;
+    if(!confirm(`Delete ${checks.length}?`)) return;
+    for (const c of checks) await fetch('/api/deny', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:c.value})});
+    fetchArchive();
+}
+async function smuggleTags(id) {
+    try {
+        const res = await fetch(`/api/get_job_details?id=${id}`);
+        const data = await res.json();
+        const target = document.getElementById(`smuggler-${id}`);
+        if (target && data.skills) target.innerHTML = `<ul style="margin:0; padding-left:18px; font-size:13px; color:#444;">${data.skills.slice(0,2).map(s => `<li>${s.name}</li>`).join('')}</ul>`;
+    } catch(e){}
+}
+function setupSearch() {
+    const btn = document.querySelector('.btn-find');
+    const input = document.querySelector('.search-input');
+    if (btn) btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const term = input.value.toLowerCase();
+        const filtered = globalJobs.filter(j => j.title.toLowerCase().includes(term) || j.company.toLowerCase().includes(term));
+        renderFeedList(filtered);
+    });
+}
+
+EOF
+
+# ============================================================
+# FILE: static/camouflage/index.html
+# ============================================================
+mkdir -p "static/camouflage"
+cat << 'EOF' > "static/camouflage/index.html"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Search | Indeed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Extra styles for the Launchpad Controls */
+        .btn-action { width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; font-size: 15px; }
+        .btn-tailor { background: #2557a7; color: white; } .btn-tailor:hover { background: #164081; }
+        .btn-pdf { background: #fff; border-color: #ccc; color: #2d2d2d; } .btn-pdf:hover { background: #f3f2f1; }
+        .btn-target { background: transparent; color: #2557a7; border: none; text-decoration: underline; font-size: 14px; }
+        .btn-move { background: #f3f2f1; color: #595959; border: none; font-size: 13px; } .btn-move:hover { background: #e4e2e0; color: #333; }
+        
+        .archive-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #e4e2e0; background: #fff; }
+        .archive-row:hover { background: #fafafa; }
+        .archive-check { margin-right: 15px; transform: scale(1.2); }
+        .archive-info { flex: 1; }
+        .archive-actions { display: flex; gap: 10px; }
+        .btn-sm-ghost { padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; background: #fff; cursor: pointer; }
+        .btn-sm-ghost:hover { background: #f3f2f1; }
+        
+        /* State visibility */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        .nav-link.active { border-bottom: 2px solid #2557a7; color: #2557a7; padding-bottom: 19px; } /* Adjust for nav height */
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="main">
+        <img src="indded.png" alt="Indeed" height="30">
+        <div id="nav-feed" class="nav-link active" onclick="switchView('FEED')">Job Feed</div>
+        <div id="nav-archive" class="nav-link" onclick="switchView('ARCHIVE')">My jobs</div>
+        <div class="nav-link">Salary guide</div>
+        <div class="nav-right">
+            <div style="font-weight:normal; font-size:14px; margin-right:10px;">
+                <i class="bi bi-chat-left-text"></i>
+            </div>
+            <div style="font-weight:normal; font-size:14px; margin-right:10px;">
+                <i class="bi bi-bell"></i>
+            </div>
+            <i class="bi bi-person-circle" style="font-size:24px; color:#2d2d2d;"></i>
+        </div>
+    </div>
+
+    <!-- FEED VIEW (THE WORKBENCH) -->
+    <div id="view-feed" class="view-section active">
+        <!-- SEARCH BAR (Visual Only) -->
+        <div class="search-container">
+            <div class="search-pill">
+                <span style="font-weight:bold; padding-left:10px;">What</span>
+                <input type="text" class="search-input" placeholder="Job title, keywords, or company">
+                <i class="bi bi-search" style="margin-right:10px;"></i>
+                <div class="divider"></div>
+                <span style="font-weight:bold; padding-left:10px;">Where</span>
+                <input type="text" class="search-input" placeholder="City, state, zip code, or remote" value="Turlock, CA">
+                <i class="bi bi-geo-alt-fill" style="margin-right:10px;"></i>
+                <button class="btn-find">Find jobs</button>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <!-- LEFT: FEED -->
+            <div class="feed-col" id="feed-container"></div>
+
+            <!-- RIGHT: DETAIL -->
+            <div class="detail-col">
+                <div id="detail-header" class="detail-header">
+                    <div style="color:#666; padding:20px;">Select a target to engage.</div>
+                </div>
+                <div id="detail-body" class="detail-scroll"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ARCHIVE VIEW (THE VAULT) -->
+    <div id="view-archive" class="view-section">
+        <div style="max-width: 1000px; margin: 40px auto; padding: 0 20px;">
+            <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 20px;">My jobs</h1>
+            
+            <div style="background: #fff; border: 1px solid #d4d2d0; border-radius: 8px; overflow: hidden;">
+                <div style="padding: 15px; background: #f3f2f1; border-bottom: 1px solid #d4d2d0; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600; font-size: 14px;">Applied / Delivered</span>
+                    <button class="btn-sm-ghost" style="color: #b71b1b; border-color: #b71b1b;" onclick="removeSelected()">Remove Selected</button>
+                </div>
+                <div id="archive-container">
+                    <!-- ARCHIVE ROWS GO HERE -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="ghost.js"></script>
+</body>
+</html>
+
+EOF
+
+# ============================================================
+# FILE: static/camouflage/style.css
+# ============================================================
+mkdir -p "static/camouflage"
+cat << 'EOF' > "static/camouflage/style.css"
+/* INDEED CAMOUFLAGE V3 - HIGH VISIBILITY */
+:root {
+    --primary-blue: #2557a7;
+    --hover-blue: #164081;
+    --success-green-bg: #f3fcf2;
+    --success-green-text: #2a8547;
+    --text-dark: #1a1a1a; /* Darker for contrast */
+    --text-gray: #444444; /* Darker for contrast */
+    --bg-gray: #f3f2f1;
+    --border-color: #d4d2d0;
+}
+
+* { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+body { background-color: #fff; color: var(--text-dark); margin: 0; padding-bottom: 50px; font-size: 16px; }
+
+/* NAVBAR */
+.main { display: flex; align-items: center; height: 70px; border-bottom: 1px solid var(--border-color); padding: 0 24px; }
+.nav-link { margin-left: 24px; font-size: 16px; font-weight: 500; cursor: pointer; color: var(--text-dark); }
+.nav-right { margin-left: auto; display: flex; gap: 20px; align-items: center; color: var(--primary-blue); font-weight: 700; font-size: 15px; }
+
+/* SEARCH BAR CONTAINER */
+.search-container {
+    background: #fff;
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+}
+
+.search-pill {
+    display: flex;
+    border: 1px solid #767676; /* Darker border */
+    border-radius: 8px; 
+    padding: 8px;
+    width: 960px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    align-items: center;
+    height: 60px;
+}
+
+.search-input {
+    border: none;
+    outline: none;
+    font-size: 17px;
+    padding: 10px;
+    flex: 1;
+    font-weight: 500;
+    color: #000;
+}
+
+.divider { width: 1px; height: 36px; background: #ccc; margin: 0 15px; }
+
+.btn-find {
+    background: var(--primary-blue);
+    color: white;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 28px;
+    cursor: pointer;
+    font-size: 17px;
+}
+.btn-find:hover { background: var(--hover-blue); }
+
+/* LAYOUT GRID */
+.content-grid {
+    display: flex;
+    max-width: 1400px; /* Wider layout */
+    margin: 30px auto;
+    gap: 24px;
+    padding: 0 24px;
+}
+
+.feed-col { width: 40%; min-width: 450px; }
+.detail-col { width: 60%; position: sticky; top: 20px; height: 90vh; border: 1px solid var(--border-color); border-radius: 8px; background: white; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+/* JOB CARD (FEED) */
+.job-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    background: white;
+    transition: box-shadow 0.2s;
+}
+.job-card:hover { border-color: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+.badge-new {
+    color: #b71b1b;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: inline-block;
+}
+
+.job-title { color: #2d2d2d; font-size: 20px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; text-decoration: none; }
+.job-title:hover { text-decoration: underline; }
+.job-company { font-size: 16px; color: var(--text-dark); margin-bottom: 6px; }
+.job-loc { font-size: 16px; color: var(--text-gray); margin-bottom: 10px; }
+
+.pill-gray {
+    background: #f3f2f1;
+    color: #333; /* Darker */
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.easy-apply { color: var(--primary-blue); font-size: 15px; margin-top: 14px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
+
+/* DETAIL PANE */
+.detail-header { padding: 28px; border-bottom: 1px solid var(--border-color); background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 2; }
+.detail-scroll { padding: 28px; overflow-y: auto; flex: 1; }
+
+.detail-title { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+.btn-apply {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-weight: 700;
+    font-size: 17px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+/* GREEN TAGS */
+.insight-box {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 24px 0;
+    background: #fafafa;
+}
+.insight-title { font-weight: 700; font-size: 18px; margin-bottom: 14px; }
+
+.skill-tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--success-green-bg);
+    color: var(--success-green-text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(42, 133, 71, 0.2);
+}
+.skill-tag i { margin-right: 6px; font-size: 18px; }
+
+/* GROQ-STYLE SETTINGS PANEL */
+.settings-panel {
+    background: #fff;
+    border: 1px solid #d4d2d0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 20px;
+    margin-top: -6px; /* Connect to button */
+    display: none; /* Hidden by default */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.settings-panel.open { display: block; animation: slideDown 0.2s ease-out; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.setting-row { margin-bottom: 16px; }
+.setting-label { font-size: 12px; font-weight: 700; color: #595959; margin-bottom: 6px; display: flex; justify-content: space-between; }
+.setting-val { color: #2557a7; }
+
+/* Custom Range Slider */
+input[type=range] {
+    -webkit-appearance: none; width: 100%; background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #2557a7; cursor: pointer; margin-top: -6px;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%; height: 4px; cursor: pointer; background: #e4e2e0; border-radius: 2px;
+}
+
+/* Custom Select */
+.groq-select {
+    width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; font-family: monospace; background: #fff; color: #333;
+}
+
+/* Prompt Area */
+.groq-textarea {
+    width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; resize: vertical; line-height: 1.4; color: #333;
+}
+
+.btn-gear {
+    width: 40px; background: #f3f2f1; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; color: #595959; display: flex; align-items: center; justify-content: center;
+}
+.btn-gear:hover { background: #e4e2e0; color: #333; }
+.btn-gear.active { background: #e0e0e0; border-color: #999; color: #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+
+EOF
+
+# ============================================================
+# FILE: static/css/style.css
+# ============================================================
+mkdir -p "static/css"
+cat << 'EOF' > "static/css/style.css"
+body { margin:0; font-family: monospace; background:#000; color:#0f0; display:flex; }
+#left { width:40%; border-right:2px solid #0f0; padding:10px; overflow-y:auto; height:100vh; }
+#right { width:60%; padding:20px; overflow-y:auto; height:100vh; }
+.job-card { padding:12px; margin:8px 0; border:1px solid #0f0; cursor:pointer; }
+.job-card:hover { background:#002200; }
+#keys { position:fixed; bottom:10px; right:10px; background:#000; padding:10px; border:2px solid #0f0; }
+.skill { margin:5px 0; padding:5px; background:#001100; display:inline-block; }
+.required { border-left:4px solid #0ff; }
+#details h2 { color:#0ff; }
+#details h3 { margin-top:20px; }
+.c-btn { cursor:pointer; font-weight:bold; padding:2px 5px; border:1px solid; border-radius:3px; font-size:11px; }
+.c-btn:hover { background:#333; }
+
+EOF
+
+# ============================================================
+# FILE: static/js/main.js
+# ============================================================
+mkdir -p "static/js"
+cat << 'EOF' > "static/js/main.js"
+let jobList = [], currentJobId = null, currentTab = 'PENDING';
+let focusMode = 'JOBS'; 
+let refineryTags = []; 
+let currentTagIndex = 0;
+let currentJobUrl = '';
+
+document.getElementById('temp-slider').addEventListener('input', (e) => {
+    document.getElementById('temp-val').innerText = e.target.value;
+});
+
+// --- TRANSLATION LAYER (UI -> SERVER) ---
+function getStatusParam(tab) {
+    if (tab === 'PENDING') return 'NEW';
+    if (tab === 'TAGGING' || tab === 'GENERATION') return 'APPROVED';
+    if (tab === 'COMPLETED') return 'DELIVERED';
+    if (tab === 'DENIED') return 'DENIED';
+    return 'NEW';
+}
+
+async function loadJobs() {
+    let statusQuery = getStatusParam(currentTab);
+    const res = await fetch(`/api/jobs?status=${statusQuery}`);
+    jobList = await res.json();
+    renderHeader();
+    renderList();
+    
+    if (currentJobId && jobList.find(j => j.id === currentJobId)) {
+        selectJob(currentJobId);
+    } else if (jobList.length > 0) {
+        selectJob(jobList[0].id);
+    } else {
+        if(document.getElementById('std-desc-box')) document.getElementById('std-desc-box').innerHTML = "<div style='padding:20px;text-align:center;color:#666'>SECTOR CLEAR. NO TARGETS.</div>";
+        if(document.getElementById('std-tags')) document.getElementById('std-tags').innerHTML = "";
+    }
+    updateStats();
+    updateControls();
+}
+
+function renderHeader() {
+    const h = document.getElementById('grid-header');
+    if (currentTab === 'PENDING') {
+        h.style.gridTemplateColumns = "50px 70px 80px 1fr 1fr";
+        h.innerHTML = `<div>SCR</div><div>PAY</div><div>LOC</div><div>ROLE</div><div>CORP</div>`;
+    } else if (currentTab === 'DENIED') {
+        h.style.gridTemplateColumns = "1fr 1fr 80px 80px 80px";
+        h.innerHTML = `<div>TITLE</div><div>CORP</div><div>PAY</div><div>LOC</div><div>TYPE</div>`;
+    } else {
+        h.style.gridTemplateColumns = "30px 1fr 1fr 1fr 140px"; 
+        h.innerHTML = `<div><input type="checkbox" onclick="toggleAll(this)"></div><div>TITLE</div><div>CORP</div><div>CITY</div><div>CONTROLS</div>`;
+    }
+}
+
+function renderList() {
+    const c = document.getElementById('list-container');
+    c.innerHTML = jobList.map(j => {
+        let cols = '';
+        if (currentTab === 'PENDING') {
+            cols = `
+                <div style="color:${j.score>=50?'#ffd700':'#666'}">${j.score}</div>
+                <div style="color:#00e676">${j.pay}</div>
+                <div style="color:#8be9fd">${j.city}</div>
+                <div style="font-weight:bold;white-space:nowrap;overflow:hidden">${j.title}</div>
+                <div style="color:#ffd700;white-space:nowrap;overflow:hidden">${j.company}</div>
+            `;
+            return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 50px 70px 80px 1fr 1fr;" onclick="selectJob('${j.id}')">${cols}</div>`;
+        } else if (currentTab === 'DENIED') {
+            const type = j.status === 'AUTO_DENIED' ? 'AUTO' : 'MAN';
+            cols = `
+                <div style="font-weight:bold;white-space:nowrap;overflow:hidden">${j.title}</div>
+                <div style="color:#ffd700;white-space:nowrap;overflow:hidden">${j.company}</div>
+                <div style="color:#00e676">${j.pay}</div>
+                <div style="color:#8be9fd">${j.city}</div>
+                <div style="color:#f00">${type}</div>
+            `;
+            return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 1fr 1fr 80px 80px 80px;" onclick="selectJob('${j.id}')">${cols}</div>`;
+        } else {
+            const btnPDF = j.has_pdf 
+                ? `<span class="c-btn" style="border-color:#00e676; color:#00e676;" onclick="window.open('${j.pdf_link}', '_blank'); event.stopPropagation();">PDF</span>` 
+                : `<span class="c-btn" style="border-color:#333; color:#333;">...</span>`;
+            
+            const btnDir = `<span class="c-btn" style="border-color:#ffd700; color:#ffd700;" onclick="openFolder('${j.id}'); event.stopPropagation();">DIR</span>`;
+            const btnJob = `<span class="c-btn" style="border-color:#2196f3; color:#2196f3;" onclick="window.open('${j.job_url}', '_blank'); event.stopPropagation();">JOB</span>`;
+
+            cols = `
+                <div onclick="event.stopPropagation()"><input type="checkbox" class="job-check" value="${j.id}"></div>
+                <div style="font-weight:bold;white-space:nowrap;overflow:hidden">${j.title}</div>
+                <div style="color:#ffd700;white-space:nowrap;overflow:hidden">${j.company}</div>
+                <div style="color:#8be9fd">${j.city}</div>
+                <div style="display:flex; gap:5px;">${btnPDF}${btnDir}${btnJob}</div>
+            `;
+            return `<div class="job-row" id="row-${j.id}" style="grid-template-columns: 30px 1fr 1fr 1fr 140px;" onclick="selectJob('${j.id}')">${cols}</div>`;
+        }
+    }).join('');
+}
+
+async function openFolder(id) {
+    await fetch('/api/open_folder', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})});
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    focusMode = 'JOBS';
+    currentTagIndex = 0;
+    updateRefineryFocus();
+    
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    // MAPPING TAB INDEX MANUALLY
+    const tabs = document.querySelectorAll('.tab');
+    if(tab === 'PENDING') tabs[0].classList.add('active');
+    if(tab === 'TAGGING') tabs[1].classList.add('active');
+    if(tab === 'GENERATION') tabs[2].classList.add('active');
+    if(tab === 'COMPLETED') tabs[3].classList.add('active');
+    if(tab === 'DENIED') tabs[4].classList.add('active');
+    
+    ['standard-view', 'refinery-view', 'factory-view', 'product-view'].forEach(id => {
+        if(document.getElementById(id)) document.getElementById(id).style.display = 'none';
+    });
+
+    if (tab === 'PENDING' || tab === 'DENIED') document.getElementById('standard-view').style.display = 'flex';
+    if (tab === 'TAGGING') document.getElementById('refinery-view').style.display = 'flex';
+    if (tab === 'GENERATION') document.getElementById('factory-view').style.display = 'flex';
+    if (tab === 'COMPLETED') document.getElementById('product-view').style.display = 'flex';
+
+    loadJobs();
+}
+
+function updateControls() {
+    document.querySelectorAll('#controls button').forEach(b => b.style.display = 'none');
+    
+    if (currentTab === 'PENDING') {
+        document.getElementById('btn-a').style.display = 'inline-block';
+        document.getElementById('btn-d').style.display = 'inline-block';
+    }
+    if (currentTab === 'GENERATION') {
+        document.getElementById('btn-p').style.display = 'inline-block';
+        document.getElementById('btn-b').style.display = 'inline-block';
+        document.getElementById('btn-g').style.display = 'inline-block';
+    }
+    if (currentTab === 'COMPLETED') {
+        document.getElementById('btn-pb').style.display = 'inline-block'; 
+        document.getElementById('btn-d').style.display = 'inline-block'; 
+    }
+    if (currentTab === 'DENIED') {
+        document.getElementById('btn-r').style.display = 'inline-block';
+        document.getElementById('btn-bl').style.display = 'inline-block';
+    }
+}
+
+async function selectJob(id) {
+    currentJobId = id;
+    document.querySelectorAll('.job-row').forEach(r=>r.classList.remove('active'));
+    if(document.getElementById('row-'+id)) document.getElementById('row-'+id).classList.add('active');
+    
+    if (currentTab === 'COMPLETED') {
+        const variants = await fetch(`/api/get_gauntlet_files?id=${id}`).then(r=>r.json());
+        const sel = document.getElementById('result-selector');
+        sel.innerHTML = `<option value="PRIMARY">PRIMARY (LATEST)</option>`;
+        variants.forEach(v => {
+            sel.innerHTML += `<option value="${v}">${v}</option>`;
+        });
+        
+        const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
+        currentJobUrl = d.url;
+        await loadArtifact("PRIMARY");
+        return;
+    }
+
+    const d = await fetch(`/api/get_job_details?id=${id}`).then(r=>r.json());
+    currentJobUrl = d.url; 
+    
+    if (currentTab === 'PENDING' || currentTab === 'DENIED') {
+        document.getElementById('std-desc-box').innerHTML = d.description;
+        const allTags = d.skills.map(s => 
+            `<span class="skill-tag ${s.category === 'new' ? 'new' : 'sorted'}">${s.name}</span>`
+        ).join('');
+        document.getElementById('std-tags').innerHTML = allTags;
+    }
+    
+    if (currentTab === 'TAGGING') {
+        renderRefinery(d.skills);
+        if (focusMode === 'TAGS') {
+            currentTagIndex = 0;
+            updateRefineryFocus();
+        }
+    }
+    
+    if (currentTab === 'GENERATION') {
+        const allTags = d.skills.map(s => 
+            `<span class="skill-tag ${s.category === 'new' ? 'new' : 'sorted'}">${s.name}</span>`
+        ).join('');
+        document.getElementById('factory-intel').innerHTML = `
+            <div style="margin-bottom:10px; color:#ffd700;">[STRATEGIC ASSETS]</div>
+            ${allTags}
+            <div style="margin:10px 0; color:#00e676;">[TARGET DESCRIPTION]</div>
+            ${d.description}
+        `;
+    }
+}
+
+function openJobLink() {
+    if(currentJobUrl && currentJobUrl !== '#') window.open(currentJobUrl, '_blank');
+    else alert("No Uplink Available.");
+}
+
+async function loadArtifact(variant) {
+    if(!currentJobId) return;
+    const a = await fetch('/api/get_artifact', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:currentJobId, variant:variant})
+    }).then(r=>r.json());
+    document.getElementById('resume-content').value = a.content;
+}
+
+function renderRefinery(skills) {
+    refineryTags = skills.filter(s => s.category === 'new');
+    const q = skills.filter(s => s.category === 'qualifications');
+    const s = skills.filter(s => s.category === 'skills');
+    const b = skills.filter(s => s.category === 'benefits');
+
+    document.getElementById('refinery-new-tags').innerHTML = refineryTags.map((t, i) => 
+        `<span id="rtag-${i}" class="skill-tag new" onmousedown="clickSort('${t.name}')">${t.name}</span>`
+    ).join('');
+
+    document.querySelector('#col-q').innerHTML = `<div class="col-header">QUALS</div>` + q.map(t=>`<div class="skill-tag q">${t.name}</div>`).join('');
+    document.querySelector('#col-s').innerHTML = `<div class="col-header">SKILLS</div>` + s.map(t=>`<div class="skill-tag s">${t.name}</div>`).join('');
+    document.querySelector('#col-b').innerHTML = `<div class="col-header">BENEFITS</div>` + b.map(t=>`<div class="skill-tag b">${t.name}</div>`).join('');
+    
+    updateRefineryFocus();
+}
+
+function updateRefineryFocus() {
+    if (currentTab !== 'TAGGING') return;
+    const box = document.getElementById('unsorted-box');
+    if (focusMode === 'TAGS') {
+        box.style.border = "2px solid #00e676"; 
+        box.style.background = "#1a261a"; 
+    } else {
+        box.style.borderBottom = "1px solid #333";
+        box.style.borderTop = "none";
+        box.style.borderLeft = "none";
+        box.style.borderRight = "none";
+        box.style.background = "#0d1117";
+    }
+    for (let i = 0; i < refineryTags.length; i++) {
+        const el = document.getElementById(`rtag-${i}`);
+        if (!el) continue;
+        if (focusMode === 'TAGS' && i === currentTagIndex) {
+            el.style.background = "#ffd700";
+            el.style.color = "#000";
+            el.style.borderColor = "#ffd700";
+            el.scrollIntoView({block: 'nearest', inline: 'nearest'});
+        } else {
+            el.style.background = "transparent";
+            el.style.color = "#ffd700";
+            el.style.borderColor = "#ffd700";
+        }
+    }
+}
+
+async function clickSort(tag) { harvestTag(tag, 'skills'); }
+async function harvestTag(tag, category) {
+    await fetch('/api/harvest_tag', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tag:tag, category:category})});
+    await selectJob(currentJobId); 
+    if (currentTagIndex >= refineryTags.length) currentTagIndex = Math.max(0, refineryTags.length - 1);
+    updateRefineryFocus();
+}
+
+function log(msg) {
+    const term = document.getElementById('factory-terminal');
+    if(term) {
+        term.innerHTML += msg; 
+        term.scrollTop = term.scrollHeight;
+    }
+}
+
+async function action(act) {
+    if(!currentJobId) return;
+    
+    if (act === 'process') {
+        batchExecute(true); 
+        return;
+    }
+
+    const endpoint = {'approve':'/api/approve', 'deny':'/api/deny', 'restore':'/api/restore'}[act];
+    await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentJobId})});
+    
+    const idx = jobList.findIndex(j=>j.id===currentJobId);
+    if(idx > -1) {
+        jobList.splice(idx, 1);
+        document.getElementById('row-'+currentJobId).remove();
+        if(jobList[idx]) selectJob(jobList[idx].id);
+        else if(jobList[idx-1]) selectJob(jobList[idx-1].id);
+    }
+    updateStats();
+}
+
+async function batchExecute(singleMode=false) {
+    let targets = [];
+    
+    if (singleMode) {
+        if(!currentJobId) return;
+        targets = [currentJobId];
+    } else {
+        const checks = document.querySelectorAll('.job-check:checked');
+        if(checks.length === 0) return alert("NO TARGETS SELECTED.");
+        if(!confirm(`EXECUTE BATCH AI ON ${checks.length} TARGETS?`)) return;
+        targets = Array.from(checks).map(c => c.value);
+    }
+    
+    const term = document.getElementById('factory-terminal');
+    if(term) {
+        if(!singleMode) term.innerText = `> INITIALIZING BATCH PROTOCOL (${targets.length} TARGETS)...\n`;
+        else term.innerText = `> ENGAGING TARGET: ${currentJobId}...\n`;
+    }
+    
+    const model = document.getElementById('model-select').value;
+    const temp = document.getElementById('temp-slider').value;
+
+    for (const id of targets) {
+        selectJob(id); 
+        log(`<div style='color:#888'> > CONTACTING: ${model} for Job ${id}...</div>`);
+        
+        try {
+            const res = await fetch('/api/process_job', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({id:id, model:model, temp:temp})
+            });
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                const row = document.getElementById('row-' + id);
+                if(row) row.remove();
+                const idx = jobList.findIndex(j => j.id === id);
+                if (idx > -1) jobList.splice(idx, 1);
+                
+                let linkHtml = "";
+                if(data.pdf_url) {
+                    linkHtml = `<button style="background:#00e676; color:#000; border:none; padding:5px 10px; font-weight:bold; cursor:pointer; margin-top:5px;" onclick="window.open('${data.pdf_url}', '_blank')">OPEN PDF ASSET</button>`;
+                }
+
+                const html = `
+                <div style="margin-top:20px; border-top: 1px dashed #444; padding-top:10px;">
+                    <div style="color:#2196f3; font-weight:bold;">
+                        TARGET: ${id} | MOVED TO OUTPUT
+                    </div>
+                    <div style="color:#00e676; white-space:pre-wrap;">${data.response.substring(0, 100)}...</div>
+                    ${linkHtml}
+                    <div style="color:#888; font-size:10px; margin-top:10px;">
+                        SAVED TO: ${data.file} | TIME: ${data.duration.toFixed(2)}s
+                    </div>
+                </div>
+                `;
+                log(html);
+            } else {
+                log(`<div style="color:red;">!!! FAILED: ${data.error}</div>`);
+            }
+        } catch(e) {
+            log(`<div style="color:red;">!!! NETWORK ERROR: ${e}</div>`);
+        }
+        
+        if(targets.length > 1) await new Promise(r => setTimeout(r, 2000));
+    }
+    
+    log("<div style='color:#00e676; margin-top:20px; border-top:2px solid #00e676;'> > EXECUTION COMPLETE.</div>");
+    loadJobs();
+}
+
+async function batchPDF() {
+    const checks = document.querySelectorAll('.job-check:checked');
+    if(checks.length === 0) return alert("NO TARGETS SELECTED.");
+    if(!confirm(`RE-COMPILE PDFS FOR ${checks.length} TARGETS?`)) return;
+
+    const btn = document.getElementById('btn-pb');
+    const originalText = btn.innerText;
+    btn.innerText = "WORKING...";
+    
+    for (const check of checks) {
+        const id = check.value;
+        try {
+            await fetch("/api/generate_pdf", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({id: id})
+            });
+            const row = document.getElementById('row-'+id);
+            if(row) {
+                row.style.background = "#1a261a"; 
+                setTimeout(() => row.style.background = "", 500);
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+    
+    btn.innerText = originalText;
+    alert("BATCH PDF RE-COMPILE COMPLETE. REFRESHING GRID.");
+    loadJobs(); 
+}
+
+async function runGauntlet() {
+    if(!currentJobId) return;
+    if(!confirm("START CAMPAIGN?")) return;
+    
+    const term = document.getElementById('factory-terminal');
+    term.innerHTML = "<div style='color:#00e676; border-bottom:1px solid #333; margin-bottom:10px;'> > CAMPAIGN INITIALIZED.</div>";
+
+    const opts = document.getElementById('model-select').options;
+    const models = Array.from(opts).map(o => o.value);
+    const temp = document.getElementById('temp-slider').value;
+    
+    const now = new Date();
+    const sessionId = now.toISOString().replace(/[:.]/g, '-');
+
+    for (const model of models) {
+        log(`<div style='color:#888'> > CONTACTING: ${model}...</div>`);
+        await new Promise(r => setTimeout(r, 2000)); 
+        
+        try {
+            const res = await fetch('/api/strike', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    id: currentJobId, 
+                    model: model, 
+                    temp: temp,
+                    session_id: sessionId
+                })
+            });
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                log(`<div style="color:#00e676;">SUCCESS: ${model}</div>`);
+            } else {
+                log(`<div style="color:red;">!!! FAILURE: ${data.error}</div>`);
+            }
+        } catch (e) {
+            log(`<div style="color:red;">!!! NETWORK ERROR: ${e}</div>`);
+        }
+    }
+    log("<div style='color:#00e676; margin-top:20px; border-top:2px solid #00e676;'> > CAMPAIGN COMPLETE.</div>");
+}
+
+async function saveJSON() {
+    if(!currentJobId) return;
+    const content = document.getElementById('resume-content').value;
+    await fetch('/api/get_artifact', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:currentJobId, save_content:content})
+    });
+    alert("Saved.");
+}
+
+function toggleAll(source) {
+    document.querySelectorAll('.job-check').forEach(c => c.checked = source.checked);
+}
+
+async function blacklistEmployer() {
+    if(!currentJobId) return;
+    const job = jobList.find(j=>j.id===currentJobId);
+    if(!confirm(`Blacklist ${job.company}?`)) return;
+    await fetch('/api/blacklist', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({term:job.company})});
+    action('deny');
+}
+
+async function updateStats() {
+    const s = await fetch('/api/status').then(r=>r.json());
+    document.getElementById('s_scraped').textContent = s.session.scraped||0;
+    document.getElementById('s_approved').textContent = s.session.approved||0;
+    document.getElementById('s_denied').textContent = s.session.denied||0;
+    document.getElementById('a_scraped').textContent = s.all_time.scraped||0;
+    document.getElementById('a_approved').textContent = s.all_time.approved||0;
+    document.getElementById('a_denied').textContent = s.all_time.denied||0;
+}
+
+async function openPDF() {
+    if(!currentJobId) return;
+    const btn = document.querySelector(".btn-pdf");
+    const originalText = btn.innerText;
+    btn.innerText = "GENERATING...";
+    btn.style.background = "#fff";
+    btn.style.color = "#000";
+    
+    try {
+        const res = await fetch("/api/generate_pdf", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({id: currentJobId})
+        });
+        const data = await res.json();
+        
+        if(data.status === "success") {
+            window.open(data.path, "_blank");
+        } else {
+            alert("PDF ERROR: " + data.message);
+        }
+    } catch(e) {
+        alert("NETWORK ERROR: " + e);
+    } finally {
+        btn.innerText = originalText;
+        btn.style.background = "";
+        btn.style.color = "";
+        loadJobs(); 
+    }
+}
+
+async function openImportModal() {
+    document.getElementById('import-modal').style.display='flex';
+    const files = await fetch('/api/scrapes').then(r=>r.json());
+    document.getElementById('modal-file-list').innerHTML = files.map(f => `<div class="file-item"><input type="checkbox" value="${f}"> ${f}</div>`).join('');
+}
+async function executeMigration() {
+    const checkboxes = document.querySelectorAll('#modal-file-list input:checked');
+    const files = Array.from(checkboxes).map(c => c.value);
+    if(files.length===0) return;
+    document.querySelector('#import-modal button:last-child').innerText = "MIGRATING...";
+    try {
+        const res = await fetch('/api/migrate', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:files})});
+        const data = await res.json();
+        alert(`REPORT: ${data.stats.new} New Jobs Added.`);
+        switchTab('PENDING');
+    } catch(e) { alert("Migration Error."); }
+    document.getElementById('import-modal').style.display='none';
+}
+
+// KEYBOARD BINDINGS
+document.addEventListener('keydown', e => {
+    if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if(document.getElementById('import-modal').style.display === 'flex') return;
+
+    if (e.key === 'Tab') {
+        e.preventDefault(); 
+        if (currentTab === 'TAGGING') {
+            focusMode = (focusMode === 'JOBS') ? 'TAGS' : 'JOBS';
+            if (focusMode === 'TAGS' && refineryTags.length > 0) {
+                 if (currentTagIndex >= refineryTags.length) currentTagIndex = 0;
+            }
+            updateRefineryFocus();
+        }
+        return;
+    }
+
+    if(e.key==='ArrowDown' || e.key==='ArrowRight') {
+        e.preventDefault();
+        if (focusMode === 'JOBS') {
+            const idx = jobList.findIndex(j=>j.id===currentJobId);
+            if(jobList[idx+1]) selectJob(jobList[idx+1].id);
+        }
+        else if (focusMode === 'TAGS') {
+            if (currentTagIndex < refineryTags.length - 1) {
+                currentTagIndex++;
+                updateRefineryFocus();
+            }
+        }
+        return;
+    }
+
+    if(e.key==='ArrowUp' || e.key==='ArrowLeft') {
+        e.preventDefault();
+        if (focusMode === 'JOBS') {
+            const idx = jobList.findIndex(j=>j.id===currentJobId);
+            if(jobList[idx-1]) selectJob(jobList[idx-1].id);
+        }
+        else if (focusMode === 'TAGS') {
+            if (currentTagIndex > 0) {
+                currentTagIndex--;
+                updateRefineryFocus();
+            }
+        }
+        return;
+    }
+
+    if (focusMode === 'JOBS') {
+        if(currentTab === 'PENDING') {
+            if(e.key==='a'||e.key==='A') action('approve');
+            if(e.key==='d'||e.key==='D') action('deny');
+        }
+        if(currentTab === 'DENIED') {
+            if(e.key==='r'||e.key==='R') action('restore');
+        }
+        if(currentTab === 'GENERATION') {
+            if(e.key==='p'||e.key==='P') action('process');
+        }
+    }
+
+    if (currentTab === 'TAGGING') {
+        if (focusMode === 'TAGS' && refineryTags.length > 0) {
+            const tag = refineryTags[currentTagIndex].name;
+            if(e.key==='q'||e.key==='Q') harvestTag(tag, 'qualifications');
+            if(e.key==='s'||e.key==='S') harvestTag(tag, 'skills');
+            if(e.key==='b'||e.key==='B') harvestTag(tag, 'benefits');
+        } 
+    }
+});
+
+switchTab('PENDING');
+
+EOF
+
+# ============================================================
+# FILE: template.html
+# ============================================================
+cat << 'EOF' > "template.html"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <style>
+        @page { size: Letter; margin: 0; padding: 0; }
+        * { box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; padding: 0; 
+            background: #ffffff; 
+            width: 100%;
+        }
+
+        /* --- THE IRON-CLAD TABLE LAYOUT --- */
+        .resume-table {
+            display: table;
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+        }
+        .resume-row { display: table-row; }
+
+        /* SIDEBAR (30%) */
+        .col-sidebar { 
+            display: table-cell;
+            width: 30%;
+            background-color: #2c3e50; 
+            color: white; 
+            padding: 50px 30px; 
+            vertical-align: top;
+            height: 100%; 
+        }
+
+        /* MAIN CONTENT (70%) */
+        .col-main { 
+            display: table-cell;
+            width: 70%; 
+            background-color: #ffffff;
+            color: #333;
+            padding: 50px 40px; 
+            vertical-align: top;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        .name { 
+            font-size: 28pt; font-weight: 800; 
+            text-transform: uppercase; line-height: 1; 
+            margin-bottom: 20px; letter-spacing: -1px;
+            word-wrap: break-word;
+        }
+        
+        .contact { 
+            font-size: 9pt; margin-bottom: 40px; 
+            line-height: 1.6; opacity: 0.95; font-weight: 300;
+        }
+        
+        .section-side { margin-bottom: 35px; page-break-inside: avoid; }
+        .header-side { 
+            border-bottom: 1px solid rgba(255,255,255,0.3); 
+            font-size: 10pt; font-weight: 700; 
+            text-transform: uppercase; margin-bottom: 12px; 
+            padding-bottom: 5px; color: #ecf0f1; letter-spacing: 1px;
+        }
+        .item-side { 
+            font-size: 9.5pt; margin-bottom: 6px; 
+            display: block; font-weight: 400; line-height: 1.4;
+        }
+
+        .job-target { 
+            font-size: 24pt; font-weight: 800; color: #2c3e50; 
+            text-transform: uppercase; margin-bottom: 5px; 
+            line-height: 1; letter-spacing: -1px;
+        }
+        .job-target-line {
+            width: 60px; height: 6px; background: #2c3e50; margin-bottom: 30px;
+        }
+
+        .summary { 
+            font-size: 10.5pt; line-height: 1.6; 
+            margin-bottom: 40px; color: #444; text-align: justify;
+        }
+        
+        .section-main { margin-bottom: 35px; }
+        .header-main { 
+            font-size: 11pt; font-weight: 800; color: #2c3e50; 
+            text-transform: uppercase; border-bottom: 2px solid #ecf0f1; 
+            margin-bottom: 20px; padding-bottom: 5px; letter-spacing: 1px;
+        }
+        
+        .job-block { margin-bottom: 25px; page-break-inside: avoid; }
+        .job-top {
+            display: flex; justify-content: space-between; 
+            align-items: baseline; margin-bottom: 4px;
+        }
+        .job-role { font-size: 12pt; font-weight: 700; color: #000; }
+        .job-dates { font-size: 10pt; color: #7f8c8d; font-weight: 600; text-align: right; min-width: 100px; }
+        .job-company { font-size: 10pt; color: #2c3e50; font-weight: 600; margin-bottom: 8px; font-style: italic;}
+        
+        .job-bullets { margin: 0; padding-left: 18px; }
+        .job-bullets li { 
+            font-size: 10pt; margin-bottom: 4px; 
+            line-height: 1.5; color: #333; 
+        }
+
+        .skill-chip {
+            display: inline-block; background: #ecf0f1; 
+            padding: 6px 10px; margin: 0 4px 4px 0;
+            font-size: 9pt; font-weight: 600; color: #2c3e50; 
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="resume-table">
+        <div class="resume-row">
+            
+            <!-- SIDEBAR -->
+            <div class="col-sidebar">
+                <div class="name">{{ contact.name.split(' ')[0] }}<br>{{ contact.name.split(' ')[1] }}</div>
+                <div class="contact">
+                    {{ contact.info | replace(" • ", "<br>") }}<br><br>
+                    {{ contact.links | replace(" • ", "<br>") }}
+                </div>
+
+                <div class="section-side">
+                    <div class="header-side">Expertise</div>
+                    {% for skill in skills_sidebar %}
+                    <span class="item-side">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="section-side">
+                    <div class="header-side">Education</div>
+                    {% for edu in education %}
+                    <span class="item-side">{{ edu }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="section-side">
+                    <div class="header-side">Certifications</div>
+                    {% for cert in certs %}
+                    <span class="item-side">{{ cert }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="col-main">
+                <div class="job-target">{{ job_title }}</div>
+                <div class="job-target-line"></div>
+                
+                <div class="section-main">
+                    <div class="header-main">Professional Summary</div>
+                    <div class="summary">{{ summary }}</div>
+                </div>
+
+                <div class="section-main">
+                    <div class="header-main">Experience</div>
+                    {% for job in experience %}
+                    <div class="job-block">
+                        <div class="job-top">
+                            <span class="job-role">{{ job.role }}</span>
+                            <span class="job-dates">{{ job.dates }}</span>
+                        </div>
+                        <div class="job-company">{{ job.company }} | {{ job.location }}</div>
+                        <ul class="job-bullets">
+                            {% for bullet in job.bullets %}
+                            <li>{{ bullet }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="section-main">
+                     <div class="header-main">Key Competencies</div>
+                     <div>
+                        {% for skill in skills_main %}
+                        <span class="skill-chip">{{ skill }}</span>
+                        {% endfor %}
+                     </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
+
+EOF
+
+# ============================================================
+# FILE: templates/index.html
+# ============================================================
+mkdir -p "templates"
+cat << 'EOF' > "templates/index.html"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TREVINO WAR ROOM</title>
+    <style>
+        :root { --bg:#0f1419; --panel:#161b22; --text:#e0e0e0; --green:#00e676; --gold:#ffd700; --red:#ff5252; --blue:#2196f3; --border:#333; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:var(--bg); color:var(--text); font-family:'Consolas',monospace; height:100vh; display:flex; overflow:hidden; }
+        
+        #job-list-pane { width:60%; border-right:1px solid var(--border); display:flex; flex-direction:column; }
+        #header-stats { padding:8px 12px; font-size:11px; background:#0d1117; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center; }
+        
+        #tabs { display:flex; background:#0d1117; border-bottom:1px solid var(--green); }
+        .tab { flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:bold; color:#666; font-size:12px; border-bottom:3px solid transparent; }
+        .tab:hover { background:#161b22; color:#fff; }
+        .tab.active { color:#fff; background:#161b22; border-bottom-color:var(--green); }
+        
+        .grid-header { display:grid; padding:8px; font-size:11px; font-weight:bold; color:#888; background:#0d1117; border-bottom:1px solid #333; }
+        .job-row { display:grid; padding:10px; border-bottom:1px solid #222; cursor:pointer; font-size:13px; align-items:center; }
+        .job-row:hover { background:#21262d; }
+        .job-row.active { background:#1a2636; border-left:4px solid var(--green); }
+        #list-container { flex-grow:1; overflow-y:auto; }
+        
+        #detail-pane { width:40%; background:var(--panel); display:flex; flex-direction:column; height: 100vh; }
+        #standard-view, #refinery-view, #factory-view, #product-view { display:none; flex-direction:column; flex: 1; overflow: hidden; min-height: 0; }
+        
+        /* STANDARD VIEW */
+        #std-skills-box { height:30%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
+        #std-desc-box { height:70%; padding:20px; overflow-y:auto; color:#ccc; line-height:1.5; font-size:14px; }
+
+        /* TAGGING VIEW */
+        #unsorted-box { height:40%; padding:15px; border-bottom:1px solid var(--border); overflow-y:auto; background:#0d1117; }
+        #arsenal-box { height:60%; display:flex; flex-direction:column; }
+        .arsenal-cols { display:flex; height:100%; }
+        .arsenal-col { flex:1; border-right:1px solid #333; padding:10px; overflow-y:auto; }
+        .col-header { color:#666; font-size:10px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; text-align:center; }
+
+        /* GENERATION VIEW */
+        #factory-controls { padding:15px; background:#0d1117; border-bottom:1px solid var(--border); }
+        .control-row { display:flex; gap:10px; margin-bottom:10px; align-items:center; }
+        select { background:#000; color:#fff; border:1px solid #444; padding:5px; flex:1; }
+        input[type=range] { flex:1; }
+        .btn-link { background:var(--blue); color:#fff; border:none; padding:5px 10px; font-size:10px; cursor:pointer; }
+        #factory-terminal { flex:1; background:#000; color:var(--green); padding:15px; font-family:'Courier New'; font-size:11px; overflow-y:auto; white-space:pre-wrap; border-bottom:1px solid #333; }
+        #factory-intel { height:25%; padding:15px; overflow-y:auto; background:#161b22; color:#888; font-size:12px; border-top:1px solid #333; }
+        
+        /* PRODUCT VIEW */
+        #product-header { padding:10px; background:#0d1117; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items: center; gap: 5px; }
+        #resume-content { flex:1; overflow-y:auto; padding:15px; font-size:12px; color:#ccc; font-family:'Courier New'; white-space:pre-wrap; background:#000; border:none; resize:none; }
+        
+        .tag-section-title { font-size:10px; color:#666; margin:5px 0 2px 0; text-transform:uppercase; font-weight:bold; }
+        .skill-tag { display:inline-block; border:1px solid #444; padding:3px 8px; margin:3px; border-radius:4px; font-size:11px; cursor:pointer; }
+        .skill-tag.new { border-color:var(--gold); color:var(--gold); }
+        .skill-tag.q { border-color:var(--green); color:var(--green); }
+        .skill-tag.s { border-color:var(--blue); color:var(--blue); }
+        .skill-tag.b { border-color:#9c27b0; color:#9c27b0; }
+        .skill-tag.sorted { border-color:#333; color:#666; background:#111; }
+        
+        #controls { padding:15px; background:#0d1117; border-top:1px solid var(--border); display:flex; justify-content:center; gap:10px; flex-wrap:wrap; flex-shrink: 0; }
+        button { padding:10px 15px; border-radius:4px; border:1px solid #555; background:transparent; color:#fff; cursor:pointer; font-weight:bold; display:none; font-size:11px; }
+        
+        .btn-approve { border-color:var(--green); color:var(--green); } .btn-approve:hover { background:var(--green); color:#000; }
+        .btn-deny { border-color:var(--red); color:var(--red); } .btn-deny:hover { background:var(--red); color:#000; }
+        .btn-process { border-color:var(--gold); color:var(--gold); } .btn-process:hover { background:var(--gold); color:#000; }
+        .btn-batch { border-color:#2196f3; color:#2196f3; } .btn-batch:hover { background:#2196f3; color:#fff; }
+        .btn-gauntlet { border-color:#ff5252; color:#ff5252; } .btn-gauntlet:hover { background:#ff5252; color:#fff; }
+        .btn-blacklist { border-color:#888; color:#888; } .btn-blacklist:hover { background:#333; color:#fff; }
+        .btn-restore { border-color:#00e676; color:#00e676; } .btn-restore:hover { background:#00e676; color:#000; }
+        .btn-pdf { background:var(--green); color:#000; border:none; display:inline-block; }
+        .btn-save { background:var(--blue); color:#fff; border:none; display:inline-block; }
+        .btn-pdf-batch { border-color:#9c27b0; color:#9c27b0; } .btn-pdf-batch:hover { background:#9c27b0; color:#fff; }
+        .btn-import { display:inline-block; font-size:11px; padding:4px 8px; border-color:#888; color:#888; } .btn-import:hover { border-color:#fff; color:#fff; }
+
+        #import-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; }
+        .modal-content { background:#161b22; border:1px solid var(--green); padding:20px; width:400px; border-radius:8px; }
+        .file-list { max-height:200px; overflow-y:auto; margin:15px 0; border:1px solid #333; padding:10px; }
+        .file-item { display:flex; gap:10px; padding:5px; border-bottom:1px solid #222; font-size:12px; }
+    </style>
+</head>
+<body>
+    <div id="job-list-pane">
+        <div id="header-stats">
+            <div class="stat-block">
+                <span style="color:var(--green)">SESSION:</span>
+                <span class="stat-item">IN:<span id="s_scraped" class="stat-val-s">0</span></span>
+                <span class="stat-item">OK:<span id="s_approved" class="stat-val-s">0</span></span>
+                <span class="stat-item">NO:<span id="s_denied" class="stat-val-s">0</span></span>
+            </div>
+            <div class="stat-block" style="border-left:1px solid #333; padding:10px; margin-left:10px;">
+                <span style="color:var(--blue)">TOTAL:</span>
+                <span class="stat-item">IN:<span id="a_scraped" class="stat-val-a">0</span></span>
+                <span class="stat-item">OK:<span id="a_approved" class="stat-val-a">0</span></span>
+                <span class="stat-item">NO:<span id="a_denied" class="stat-val-a">0</span></span>
+            </div>
+            <button class="btn-import" onclick="openImportModal()">+ IMPORT</button>
+        </div>
+        
+        <div id="tabs">
+            <div class="tab active" onclick="switchTab('NEW')">PENDING</div>
+            <div class="tab" onclick="switchTab('TAGGING')">TAGGING</div>
+            <div class="tab" onclick="switchTab('GENERATION')">GENERATION</div>
+            <div class="tab" onclick="switchTab('DELIVERED')">COMPLETED</div>
+            <div class="tab" onclick="switchTab('DENIED')">DENIED</div>
+        </div>
+        <div class="grid-header" id="grid-header"></div>
+        <div id="list-container"></div>
+    </div>
+    
+    <div id="detail-pane">
+        <div id="standard-view">
+            <div id="std-skills-box">
+                <div class="tag-section-title">DETECTED SIGNALS</div>
+                <div id="std-tags"></div>
+            </div>
+            <div id="std-desc-box">Select a target...</div>
+        </div>
+
+        <div id="refinery-view">
+            <div id="unsorted-box">
+                <div class="col-header" style="color:var(--gold); text-align:left;">UNSORTED SIGNALS (Q / S / B)</div>
+                <div id="refinery-new-tags"></div>
+            </div>
+            <div id="arsenal-box">
+                <div class="arsenal-cols">
+                    <div class="arsenal-col" id="col-q"><div class="col-header">QUALIFICATIONS</div></div>
+                    <div class="arsenal-col" id="col-s"><div class="col-header">SKILLS</div></div>
+                    <div class="arsenal-col" id="col-b" style="border:none;"><div class="col-header">BENEFITS</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="factory-view">
+            <div id="factory-controls">
+                <div class="control-row">
+                    <label style="font-size:10px; color:#888;">MODEL:</label>
+                    <select id="model-select">
+                        <option value="moonshotai/kimi-k2-instruct" selected>moonshotai/kimi-k2-instruct (MOONSHINE)</option>
+                        <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                        <option value="groq/compound">groq/compound</option>
+                        <option value="openai/gpt-oss-safeguard-20b">openai/gpt-oss-safeguard-20b</option>
+                        <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+                        <option value="moonshotai/kimi-k2-instruct-0905">moonshotai/kimi-k2-instruct-0905</option>
+                        <option value="qwen/qwen3-32b">qwen/qwen3-32b</option>
+                        <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
+                        <option value="allam-2-7b">allam-2-7b</option>
+                        <option value="meta-llama/llama-4-scout-17b-16e-instruct">llama-4-scout-17b</option>
+                        <option value="meta-llama/llama-4-maverick-17b-128e-instruct">llama-4-maverick-17b</option>
+                        <option value="groq/compound-mini">groq/compound-mini</option>
+                    </select>
+                    <button class="btn-link" onclick="openJobLink()">LINK</button>
+                </div>
+                <div class="control-row">
+                    <label style="font-size:10px; color:#888;">TEMP:</label>
+                    <input type="range" id="temp-slider" min="0" max="1" step="0.1" value="0.7">
+                    <span id="temp-val" style="font-size:10px;">0.7</span>
+                </div>
+            </div>
+            <div id="factory-terminal">
+                > PARKER LEWIS PROTOCOL INITIALIZED.
+                > SELECT TARGET TO ENGAGE.
+            </div>
+            <div id="factory-intel">JOB INTELLIGENCE...</div>
+        </div>
+
+        <div id="product-view">
+            <div id="product-header">
+                <select id="result-selector" onchange="loadArtifact(this.value)" style="flex:1; margin-right:5px;">
+                    <option value="PRIMARY">PRIMARY (LATEST)</option>
+                </select>
+                <button class="btn-save" onclick="saveJSON()">SAVE EDITS</button>
+                <button class="btn-pdf" onclick="openPDF()">OPEN PDF</button>
+            </div>
+            <textarea id="resume-content"></textarea>
+        </div>
+
+        <div id="controls">
+            <button class="btn-deny" id="btn-d" onclick="action('deny')">DENY (D)</button>
+            <button class="btn-approve" id="btn-a" onclick="action('approve')">APPROVE (A)</button>
+            
+            <button class="btn-process" id="btn-p" onclick="action('process')">EXECUTE (1)</button>
+            <button class="btn-batch" id="btn-b" onclick="batchExecute()">BATCH AI (CHK)</button>
+            <button class="btn-pdf-batch" id="btn-pb" onclick="batchPDF()">RE-PDF (CHK)</button>
+            <button class="btn-gauntlet" id="btn-g" onclick="runGauntlet()">RUN GAUNTLET (ALL)</button>
+            
+            <button class="btn-restore" id="btn-r" onclick="action('restore')">RESTORE</button>
+            <button class="btn-blacklist" id="btn-bl" onclick="blacklistEmployer()">BLACKLIST CORP</button>
+        </div>
+    </div>
+
+    <div id="import-modal">
+        <div class="modal-content">
+            <h3 style="color:var(--green); margin-top:0;">SELECT INTEL FILES</h3>
+            <div class="file-list" id="modal-file-list"></div>
+            <div style="display:flex; justify-content:space-between;">
+                <button style="display:inline-block; border-color:#555;" onclick="document.getElementById('import-modal').style.display='none'">CANCEL</button>
+                <button style="display:inline-block; background:var(--green); border-color:var(--green); color:black;" onclick="executeMigration()">MIGRATE SELECTED</button>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
+
+EOF
+
+# ============================================================
+# FILE: unstick.py
+# ============================================================
+cat << 'EOF' > "unstick.py"
+import sqlite3
+import os
+import json
+
+DB_FILE = 'jobs.db'
+
+def unstick():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    # Get all jobs
+    jobs = c.execute("SELECT id, title, company FROM jobs").fetchall()
+    count = 0
+    
+    for job in jobs:
+        # Reconstruct path
+        safe_title = "".join(x for x in job['title'] if x.isalnum() or x in " -_").strip()[:50]
+        safe_company = "".join(x for x in job['company'] if x.isalnum() or x in " -_").strip()[:50]
+        path = f"targets/{safe_title}_{safe_company}_{job['id']}/resume.json"
+        
+        # If resume.json exists, FORCE status to DELIVERED
+        if os.path.exists(path):
+            c.execute("UPDATE jobs SET status='DELIVERED' WHERE id=?", (job['id'],))
+            count += 1
+            print(f"MOVED TO ARMORY: {job['title']}")
+
+    conn.commit()
+    conn.close()
+    print(f"--- RECOVERY COMPLETE: {count} jobs moved to Armory ---")
+
+if __name__ == "__main__":
+    unstick()
+
+EOF
